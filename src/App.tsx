@@ -306,6 +306,7 @@ function App() {
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
+
       <Navigation>
         <Title>My Board</Title>
         <Buttons>
@@ -321,6 +322,7 @@ function App() {
           </Button>
         </Buttons>
       </Navigation>
+
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="boards" direction="horizontal" type="BOARDS">
           {(provided, snapshot) => (
@@ -345,6 +347,7 @@ function App() {
             </Boards>
           )}
         </Droppable>
+
         <Droppable droppableId="trash" type="BOARD">
           {(provided, snapshot) => (
             <div>
