@@ -4,6 +4,7 @@ import Home from "./routes/home";
 import Login from "./routes/login";
 import CreateAccount from "./routes/create-account";
 import Trash from "./routes/trash";
+import Archive from "./routes/archive";
 import { createGlobalStyle, styled } from "styled-components";
 import reset from "styled-reset";
 import { useEffect, useState } from "react";
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: "trash",
         element: <Trash />,
+      },
+      {
+        path: "archive",
+        element: <Archive />,
       },
     ],
   },

@@ -1,4 +1,8 @@
 import styled from "styled-components";
+import { useRecoilState } from "recoil";
+import { isLightState, toDoState } from "../atoms";
+import { darkTheme, lightTheme } from "../theme";
+import { ThemeProvider } from "styled-components";
 
 const Title = styled.h1`
   display: flex;
@@ -19,9 +23,13 @@ const Button = styled.button`
 `;
 
 export default function TrashBoard() {
+  const [isLight, setIsLight] = useRecoilState(isLightState);
+  const toggleTheme = () => setIsLight((current) => !current);
+
   return (
-    <>
+    <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <Title>Trash Board</Title>
+
       <Button>
         <svg
           fill="currentColor"
@@ -37,6 +45,6 @@ export default function TrashBoard() {
         </svg>
         clear all trash
       </Button>
-    </>
+    </ThemeProvider>
   );
 }
