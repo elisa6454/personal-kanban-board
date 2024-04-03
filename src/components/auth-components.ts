@@ -11,6 +11,9 @@ export const Wrapper = styled.div`
 
 export const Title = styled.h1`
   font-size: 42px;
+  display: flex;
+  margin: 0px;
+  font-weight: 600;
 `;
 
 export const Form = styled.form`
@@ -126,4 +129,27 @@ export const SocialButton = styled.span`
 
 export const BtnLogo = styled.img`
   height: 20px;
+`;
+
+/* -- trash & archive  delete all btn -- */
+export const Button = styled.button`
+  display: flex;
+  align-items: center;
+  background-color: #f44336;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 18px;
+  color: white;
+  cursor: pointer;
+  svg {
+    width: 30px;
+    margin-right: 7px;
+  }
+  margin-left: auto;
+  transition: background-color 0.3s, color 0.3s;
+  &: hover {
+    background-color: white;
+    color: #f44336;
+  }
 `;
