@@ -132,15 +132,15 @@ export const BtnLogo = styled.img`
 `;
 
 /* -- trash & archive  delete all btn -- */
-export const Button = styled.button`
+export const DeleteBtn = styled.button`
   display: flex;
   align-items: center;
-  background-color: #f44336;
+  background-color: white;
   border: none;
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 18px;
-  color: white;
+  color: #f44336;
   cursor: pointer;
   svg {
     width: 30px;
@@ -149,7 +149,7 @@ export const Button = styled.button`
   margin-left: auto;
   transition: background-color 0.3s, color 0.3s;
   &: hover {
-    background-color: white;
-    color: #f44336;
+    background-color: #f44336;
+    color: white;
   }
 `;
