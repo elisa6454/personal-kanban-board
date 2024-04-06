@@ -1,4 +1,4 @@
-import { IToDo, toDoState } from "../atoms";
+import { IToDo, deletedCardsState, toDoState } from "../atoms";
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { useSetRecoilState } from "recoil";
@@ -97,6 +97,7 @@ interface IDraggableCardProps {
 
 function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   const setToDos = useSetRecoilState(toDoState);
+  const setDeletedCards = useSetRecoilState(deletedCardsState);
 
   const onEdit = () => {
     const newToDoText = window
@@ -134,6 +135,25 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
 
   const onDelete = () => {
     if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
+      const deleteTime = new Date();
+      const formattedDeletionTime = `${deleteTime.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+      })} ${deleteTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`;
+
+      // Add the deleted card's information to deletedCardsState
+      setDeletedCards((prev) => [
+        ...prev,
+        {
+          boardId: boardId,
+          text: toDo.text,
+          deletionTime: formattedDeletionTime,
+        },
+      ]);
+
       setToDos((prev) => {
         const toDosCopy = [...prev];
         const boardIndex = toDosCopy.findIndex((board) => board.id === boardId);
@@ -145,6 +165,7 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         boardCopy.toDos = listCopy;
         toDosCopy.splice(boardIndex, 1, boardCopy);
 
+        console.log(boardId, toDo.text, formattedDeletionTime);
         return toDosCopy;
       });
     }

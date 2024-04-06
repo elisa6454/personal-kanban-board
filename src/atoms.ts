@@ -10,12 +10,20 @@ export const isLightState = atom<boolean>({
 export interface IToDo {
   id: number;
   text: string;
+  isDeleted?: boolean;
 }
 
 export interface IBoard {
   id: number;
   title: string;
   toDos: IToDo[];
+  isDeleted?: boolean;
+}
+
+export interface DeletedCardInfo {
+  boardId: number;
+  text: string;
+  deletionTime: string;
 }
 
 const instanceOfToDo = (object: unknown): object is IToDo => {
@@ -96,4 +104,9 @@ export const toDoState = atom<IBoard[]>({
     },
   ],
   effects: [localStorageEffect("trello-clone-to-dos")],
+});
+
+export const deletedCardsState = atom<DeletedCardInfo[]>({
+  key: "deletedCardsState",
+  default: [],
 });

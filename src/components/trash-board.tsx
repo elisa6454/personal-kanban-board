@@ -1,6 +1,11 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import { useRecoilState } from "recoil";
-import { isLightState, toDoState } from "../atoms";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  isLightState,
+  toDoState,
+  deletedCardsState,
+  DeletedCardInfo,
+} from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";
@@ -69,7 +74,6 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
-
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -93,8 +97,21 @@ const Button = styled.button`
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
+const TrashPageContainer = styled.div`
+  /* Your styles for the trash page container */
+`;
 
-export default function TrashBoard() {
+const handleRestore = (card: DeletedCardInfo) => {
+  // Logic to restore the deleted card
+  // You can update the state to move the card back to the main board
+};
+
+const handlePermanentDelete = (card: DeletedCardInfo) => {
+  // Logic to permanently delete the card
+  // You can remove the card from the deleted cards state
+};
+
+export default function ArchiveList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
   useEffect(() => {
@@ -104,6 +121,9 @@ export default function TrashBoard() {
         setIsLight(event.matches);
       });
   });
+
+  const deletedCards = useRecoilValue(deletedCardsState);
+
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
@@ -148,6 +168,22 @@ export default function TrashBoard() {
         </svg>
         Delete all trash
       </DeleteBtn>
+      <TrashPageContainer>
+        {/* Render deleted cards here */}
+        {deletedCards.map((card) => (
+          <div key={`${card.boardId}-${card.deletionTime}`}>
+            <p>{card.boardId}</p>
+            <p>{card.text}</p>
+            <p>{card.deletionTime}</p>
+
+            <button onClick={() => handleRestore(card)}>Restore</button>
+            <button onClick={() => handlePermanentDelete(card)}>
+              Permanently Delete
+            </button>
+            {/* Display other information */}
+          </div>
+        ))}
+      </TrashPageContainer>
     </ThemeProvider>
   );
 }
