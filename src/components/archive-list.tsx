@@ -1,6 +1,11 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import { useRecoilState } from "recoil";
-import { isLightState, toDoState } from "../atoms";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  isLightState,
+  deletedCardsState,
+  toDoState,
+  boardTitlesState,
+} from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";
@@ -69,6 +74,8 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
+const Buttons = styled.div``;
+
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -93,6 +100,41 @@ const Button = styled.button`
   }
 `;
 
+const TrashItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  width: 500px;
+  max-width: 600px;
+  margin-bottom: 1rem;
+  background-color: ${(props) => props.theme.secondaryBgColor};
+  border-radius: 0.5rem;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
+`;
+
+const TrashItemInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+`;
+
+const TrashItemText = styled.p`
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const TrashPageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+`;
+
 export default function ArchiveList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
@@ -103,6 +145,19 @@ export default function ArchiveList() {
         setIsLight(event.matches);
       });
   });
+  const deletedCards = useRecoilValue(deletedCardsState);
+  const setDeletedCards = useSetRecoilState(deletedCardsState);
+
+  const handleDeleteAllTrash = () => {
+    // Logic to delete all trash items
+    setDeletedCards([]);
+  };
+  const onDelete = (index: number) => {
+    //  Logic to remove the selected item from the list
+    const updatedDeletedCards = [...deletedCards];
+    updatedDeletedCards.splice(index, 1);
+    setDeletedCards(updatedDeletedCards);
+  };
 
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
@@ -133,7 +188,7 @@ export default function ArchiveList() {
           </svg>
         )}
       </Button>
-      <DeleteBtn>
+      <DeleteBtn onClick={handleDeleteAllTrash}>
         <svg
           fill="currentColor"
           viewBox="0 0 20 20"
@@ -148,6 +203,39 @@ export default function ArchiveList() {
         </svg>
         Delete all achive
       </DeleteBtn>
+      <TrashPageContainer>
+        {deletedCards
+          .filter((card) => card.boardId === 2)
+          .map((card, index) => {
+            return (
+              <TrashItem key={index}>
+                <TrashItemInfo>
+                  <TrashItemText>
+                    <p>{card.text}</p>
+                  </TrashItemText>
+                  <TrashItemText>
+                    <p>{card.boardId === 2 ? "Done" : card.boardId}</p>
+                  </TrashItemText>
+                  <TrashItemText>
+                    <p>{card.deletionTime}</p>
+                  </TrashItemText>
+                </TrashItemInfo>
+                <Buttons>
+                  <Button onClick={() => onDelete(index)}>
+                    <svg
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                    </svg>
+                  </Button>
+                </Buttons>
+              </TrashItem>
+            );
+          })}
+      </TrashPageContainer>
     </ThemeProvider>
   );
 }

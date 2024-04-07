@@ -1,14 +1,16 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   isLightState,
-  toDoState,
   deletedCardsState,
+  boardTitlesState,
   DeletedCardInfo,
+  homeBoardState,
 } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import KanbanBoard from "./kanban-board";
 
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
@@ -44,8 +46,7 @@ const GlobalStyle = createGlobalStyle`
 		font-family: "Pretendard", sans-serif;
 		background-color: ${(props) => props.theme.bgColor};
 		color: ${(props) => props.theme.textColor};
-		transition: background-color 0.3s, color 0.3s;
-		overflow-y: hidden;
+		transition: background-color 0.3s, color 0.3s; 
 	}
 	ol, ul {
 		list-style: none;
@@ -74,6 +75,8 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
+const Buttons = styled.div``;
+
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -97,22 +100,50 @@ const Button = styled.button`
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
-const TrashPageContainer = styled.div`
-  /* Your styles for the trash page container */
+const MainContainer = styled.div`
+  flex: 1; /* Take up remaining space */
+  overflow-x: hidden;
+  overflow-y: scroll;
 `;
 
-const handleRestore = (card: DeletedCardInfo) => {
-  // Logic to restore the deleted card
-  // You can update the state to move the card back to the main board
-};
+const TrashItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  width: 500px;
+  max-width: 600px;
+  margin-bottom: 1rem;
+  background-color: ${(props) => props.theme.secondaryBgColor};
+  border-radius: 0.5rem;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
+`;
 
-const handlePermanentDelete = (card: DeletedCardInfo) => {
-  // Logic to permanently delete the card
-  // You can remove the card from the deleted cards state
-};
+const TrashItemInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+`;
 
-export default function ArchiveList() {
+const TrashItemText = styled.p`
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const TrashPageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+`;
+
+export default function TrashList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
+
   const toggleTheme = () => setIsLight((current) => !current);
   useEffect(() => {
     window
@@ -121,8 +152,50 @@ export default function ArchiveList() {
         setIsLight(event.matches);
       });
   });
-
   const deletedCards = useRecoilValue(deletedCardsState);
+  const setDeletedCards = useSetRecoilState(deletedCardsState);
+  const setHomeBoard = useSetRecoilState(homeBoardState);
+
+  const handleDeleteAllTrash = () => {
+    // Logic to delete all trash items
+    setDeletedCards([]);
+  };
+
+  const moveCardToHomeBoard = (restoredCard: DeletedCardInfo) => {
+    const newCard: DeletedCardInfo = {
+      id: restoredCard.id,
+      text: restoredCard.text,
+      boardId: 0,
+      deletionTime: new Date().toISOString(),
+    };
+
+    setHomeBoard((prevHomeBoard) => [...prevHomeBoard, newCard]);
+
+    const updatedDeletedCards = deletedCards.filter(
+      (card) => card.id !== restoredCard.id
+    );
+    setDeletedCards(updatedDeletedCards);
+  };
+
+  const onRestart = (index: number) => {
+    // Logic is get back to home page and clear local storage
+    const updatedDeletedCards = [...deletedCards];
+    const restoredCard = updatedDeletedCards[index];
+
+    updatedDeletedCards.splice(index, 1);
+    setDeletedCards(updatedDeletedCards);
+    console.log("Restored card: ", restoredCard);
+
+    // Logic to move the restored card to the home board
+    moveCardToHomeBoard(restoredCard);
+  };
+
+  const onDelete = (index: number) => {
+    //  Logic to remove the selected item from the list
+    const updatedDeletedCards = [...deletedCards];
+    updatedDeletedCards.splice(index, 1);
+    setDeletedCards(updatedDeletedCards);
+  };
 
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
@@ -153,7 +226,7 @@ export default function ArchiveList() {
           </svg>
         )}
       </Button>
-      <DeleteBtn>
+      <DeleteBtn onClick={handleDeleteAllTrash}>
         <svg
           fill="currentColor"
           viewBox="0 0 20 20"
@@ -168,22 +241,64 @@ export default function ArchiveList() {
         </svg>
         Delete all trash
       </DeleteBtn>
-      <TrashPageContainer>
-        {/* Render deleted cards here */}
-        {deletedCards.map((card) => (
-          <div key={`${card.boardId}-${card.deletionTime}`}>
-            <p>{card.boardId}</p>
-            <p>{card.text}</p>
-            <p>{card.deletionTime}</p>
-
-            <button onClick={() => handleRestore(card)}>Restore</button>
-            <button onClick={() => handlePermanentDelete(card)}>
-              Permanently Delete
-            </button>
-            {/* Display other information */}
-          </div>
-        ))}
-      </TrashPageContainer>
+      <MainContainer>
+        <TrashPageContainer>
+          {deletedCards
+            .filter((card) => card.boardId !== 2)
+            .map((card, index) => (
+              <TrashItem key={index}>
+                <TrashItemInfo>
+                  <TrashItemText>
+                    <p>{card.text}</p>
+                  </TrashItemText>
+                  <TrashItemText>
+                    <p>
+                      {card.boardId === 0
+                        ? "To Do"
+                        : card.boardId === 1
+                        ? "Doing"
+                        : "New Board"}
+                    </p>
+                  </TrashItemText>
+                  <TrashItemText>
+                    <p>{card.deletionTime}</p>
+                  </TrashItemText>
+                </TrashItemInfo>
+                <Buttons>
+                  <Button onClick={() => onRestart(index)}>
+                    <svg
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        clipRule="evenodd"
+                        fillRule="evenodd"
+                        d="M17 4.25A2.25 2.25 0 0 0 14.75 2h-5.5A2.25 2.25 0 0 0 7 4.25v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1-.75-.75v-2a.75.75 0 0 0-1.5 0v2A2.25 2.25 0 0 0 9.25 18h5.5A2.25 2.25 0 0 0 17 15.75V4.25Z"
+                      />
+                      <path
+                        clipRule="evenodd"
+                        fillRule="evenodd"
+                        d="M1 10a.75.75 0 0 1 .75-.75h9.546l-1.048-.943a.75.75 0 1 1 1.004-1.114l2.5 2.25a.75.75 0 0 1 0 1.114l-2.5 2.25a.75.75 0 1 1-1.004-1.114l1.048-.943H1.75A.75.75 0 0 1 1 10Z"
+                      />
+                    </svg>
+                  </Button>
+                  <Button onClick={() => onDelete(index)}>
+                    <svg
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                    </svg>
+                  </Button>
+                </Buttons>
+              </TrashItem>
+            ))}
+        </TrashPageContainer>
+      </MainContainer>
     </ThemeProvider>
   );
 }
