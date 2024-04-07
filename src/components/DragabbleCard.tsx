@@ -148,6 +148,7 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
       setDeletedCards((prev) => [
         ...prev,
         {
+          id: toDo.id,
           boardId: boardId,
           text: toDo.text,
           deletionTime: formattedDeletionTime,

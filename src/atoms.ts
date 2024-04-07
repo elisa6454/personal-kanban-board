@@ -1,4 +1,4 @@
-import { atom, selector } from "recoil";
+import { atom } from "recoil";
 
 export const isLightState = atom<boolean>({
   key: "isLight",
@@ -36,10 +36,7 @@ export const boardTitlesState = atom<{ id: number; title: string }[]>({
   key: "boardTitles",
   default: [],
 });
-export const deletedCardsState = atom<DeletedCardInfo[]>({
-  key: "deletedCardsState",
-  default: [],
-});
+
 export const homeBoardState = atom<IToDo[]>({
   key: "homeBoardState",
   default: [],
@@ -123,4 +120,10 @@ export const toDoState = atom<IBoard[]>({
     },
   ],
   effects: [localStorageEffect("trello-clone-to-dos")],
+});
+
+export const deletedCardsState = atom<DeletedCardInfo[]>({
+  key: "deletedCardsState",
+  default: [],
+  effects_UNSTABLE: [localStorageEffect("deleted-cards")],
 });
