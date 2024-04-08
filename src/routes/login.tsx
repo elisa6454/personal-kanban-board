@@ -11,16 +11,15 @@ import {
   Title,
   Wrapper,
 } from "../components/auth-components";
-import { useForm } from "react-hook-form";
 import GithubButton from "../components/github-btn";
 import GoogleButton from "../components/google-btn";
 
-interface IForm {
+/* interface IForm {
   email: string;
   password: string;
   firebase?: string;
   reCaptcha?: string;
-}
+} */
 
 export default function CreateAccount() {
   const navigate = useNavigate();

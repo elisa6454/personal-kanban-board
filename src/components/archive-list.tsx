@@ -1,11 +1,6 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import {
-  isLightState,
-  deletedCardsState,
-  toDoState,
-  boardTitlesState,
-} from "../atoms";
+import { isLightState, deletedCardsState } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";

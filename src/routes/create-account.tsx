@@ -1,9 +1,4 @@
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  sendEmailVerification,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,18 +11,17 @@ import {
   Title,
   Wrapper,
 } from "../components/auth-components";
-import { useForm } from "react-hook-form";
 import GithubButton from "../components/github-btn";
 import GoogleButton from "../components/google-btn";
 
-interface IForm {
+/* interface IForm {
   name: string;
   email: string;
   password: string;
   dublecheckpassword: string;
   error?: string;
   reCaptcha?: string;
-}
+} */
 
 export default function CreateAccount() {
   const navigate = useNavigate();

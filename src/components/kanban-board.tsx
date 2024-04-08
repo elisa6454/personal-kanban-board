@@ -205,7 +205,7 @@ export default function KanbanBoard() {
     }
   };
 
-  const onDragEnd = ({ draggableId, source, destination }: DropResult) => {
+  const onDragEnd = ({ source, destination }: DropResult) => {
     if (source.droppableId === "boards") {
       if (!destination) return;
       if (source.index === destination.index) return;
@@ -345,7 +345,7 @@ export default function KanbanBoard() {
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="boards" direction="horizontal" type="BOARDS">
-          {(provided, snapshot) => (
+          {(provided) => (
             <Boards ref={provided.innerRef} {...provided.droppableProps}>
               {toDos.map((board, index) => (
                 <Draggable
@@ -369,7 +369,7 @@ export default function KanbanBoard() {
         </Droppable>
 
         <Droppable droppableId="trash" type="BOARD">
-          {(provided, snapshot) => (
+          {(provided) => (
             <div>
               <Trash ref={provided.innerRef} {...provided.droppableProps}>
                 <svg
