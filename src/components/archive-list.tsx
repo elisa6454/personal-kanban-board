@@ -138,13 +138,7 @@ const TrashPageContainer = styled.div`
 export default function ArchiveList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
-  useEffect(() => {
-    window
-      .matchMedia("(prefers-color-scheme: light")
-      .addEventListener("change", (event) => {
-        setIsLight(event.matches);
-      });
-  });
+
   const deletedCards = useRecoilValue(deletedCardsState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
 
@@ -152,6 +146,7 @@ export default function ArchiveList() {
     // Logic to delete all trash items
     setDeletedCards([]);
   };
+
   const onDelete = (index: number) => {
     //  Logic to remove the selected item from the list
     const updatedDeletedCards = [...deletedCards];
@@ -159,6 +154,12 @@ export default function ArchiveList() {
     setDeletedCards(updatedDeletedCards);
   };
 
+  useEffect(() => {
+    const storedDeletedCards = localStorage.getItem("deletedCards");
+    if (storedDeletedCards) {
+      setDeletedCards(JSON.parse(storedDeletedCards));
+    }
+  }, []);
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />

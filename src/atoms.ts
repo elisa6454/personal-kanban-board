@@ -122,8 +122,32 @@ export const toDoState = atom<IBoard[]>({
   effects: [localStorageEffect("trello-clone-to-dos")],
 });
 
+const deletedCardsLocalStorageEffect =
+  (key: string) =>
+  ({ setSelf, onSet }: any) => {
+    const savedValue = localStorage.getItem(key);
+
+    if (savedValue !== null && savedValue !== undefined) {
+      const json = (raw: string) => {
+        try {
+          return JSON.parse(raw);
+        } catch (error) {
+          return false;
+        }
+      };
+
+      if (json(savedValue) && Array.isArray(json(savedValue))) {
+        setSelf(json(savedValue));
+      }
+    }
+
+    onSet((newValue: DeletedCardInfo[]) => {
+      localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
+
 export const deletedCardsState = atom<DeletedCardInfo[]>({
   key: "deletedCardsState",
   default: [],
-  effects_UNSTABLE: [localStorageEffect("deleted-cards")],
+  effects_UNSTABLE: [deletedCardsLocalStorageEffect("deleted-cards")],
 });
