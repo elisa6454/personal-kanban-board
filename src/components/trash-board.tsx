@@ -138,16 +138,9 @@ export default function TrashList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
 
   const toggleTheme = () => setIsLight((current) => !current);
-  useEffect(() => {
-    window
-      .matchMedia("(prefers-color-scheme: light")
-      .addEventListener("change", (event) => {
-        setIsLight(event.matches);
-      });
-  });
+
   const deletedCards = useRecoilValue(deletedCardsState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
-  const setHomeBoard = useSetRecoilState(homeBoardState);
 
   const handleDeleteAllTrash = () => {
     // Logic to delete all trash items

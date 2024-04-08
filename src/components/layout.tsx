@@ -20,17 +20,18 @@ const Menu = styled.div`
 `;
 
 const MenuItem = styled.div`
+  background-color: ${({ theme }) => theme.textColor};
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid ${({ theme }) => theme.textColor};
   height: 50px;
   width: 50px;
   border-radius: 50%;
   svg {
     width: 30px;
-    fill: white;
+    fill: ${({ theme }) => theme.bgColor};
   }
   &.log-out {
     border-color: tomato;

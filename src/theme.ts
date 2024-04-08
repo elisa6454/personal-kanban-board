@@ -1,6 +1,6 @@
-import { DefaultTheme } from "styled-components";
+import { CustomTheme } from "styled-components";
 
-export const darkTheme: DefaultTheme = {
+export const darkTheme: CustomTheme = {
   bgColor: "#222222",
   textColor: "#efefef",
   secondaryTextColor: "#adadad",
@@ -16,7 +16,7 @@ export const darkTheme: DefaultTheme = {
   scrollBarColor: "#494949",
 };
 
-export const lightTheme: DefaultTheme = {
+export const lightTheme: CustomTheme = {
   bgColor: "#e7e7e9",
   textColor: "#222222",
   secondaryTextColor: "#666666",
