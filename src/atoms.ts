@@ -151,3 +151,33 @@ export const deletedCardsState = atom<DeletedCardInfo[]>({
   default: [],
   effects_UNSTABLE: [deletedCardsLocalStorageEffect("deleted-cards")],
 });
+
+const deletedArchiveLocalStorageEffect =
+  (key: string) =>
+  ({ setSelf, onSet }: any) => {
+    const savedValue = localStorage.getItem(key);
+
+    if (savedValue !== null && savedValue !== undefined) {
+      const json = (raw: string) => {
+        try {
+          return JSON.parse(raw);
+        } catch (error) {
+          return false;
+        }
+      };
+
+      if (json(savedValue) && Array.isArray(json(savedValue))) {
+        setSelf(json(savedValue));
+      }
+    }
+
+    onSet((newValue: DeletedCardInfo[]) => {
+      localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
+
+export const deletedArchiveState = atom<DeletedCardInfo[]>({
+  key: "deletedArchiveState",
+  default: [],
+  effects_UNSTABLE: [deletedArchiveLocalStorageEffect("archive-cards")],
+});
