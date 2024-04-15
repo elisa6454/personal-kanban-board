@@ -1,6 +1,6 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { isLightState, deletedCardsState } from "../atoms";
+import { isLightState, deletedArchiveState } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";
@@ -95,7 +95,7 @@ const Button = styled.button`
   }
 `;
 
-const TrashItem = styled.div`
+const ArchiveItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -108,21 +108,21 @@ const TrashItem = styled.div`
   box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
 `;
 
-const TrashItemInfo = styled.div`
+const ArchiveItemInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
   overflow: hidden;
 `;
 
-const TrashItemText = styled.p`
+const ArchiveItemText = styled.p`
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const TrashPageContainer = styled.div`
+const ArchivePageContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -134,25 +134,25 @@ export default function ArchiveList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
 
-  const deletedCards = useRecoilValue(deletedCardsState);
-  const setDeletedCards = useSetRecoilState(deletedCardsState);
+  const archivedCards = useRecoilValue(deletedArchiveState);
+  const setArchivedCards = useSetRecoilState(deletedArchiveState);
 
   const handleDeleteAllTrash = () => {
     // Logic to delete all trash items
-    setDeletedCards([]);
+    setArchivedCards([]);
   };
 
   const onDelete = (index: number) => {
     //  Logic to remove the selected item from the list
-    const updatedDeletedCards = [...deletedCards];
-    updatedDeletedCards.splice(index, 1);
-    setDeletedCards(updatedDeletedCards);
+    const updatedArchivedCards = [...archivedCards];
+    updatedArchivedCards.splice(index, 1);
+    setArchivedCards(updatedArchivedCards);
   };
 
   useEffect(() => {
-    const storedDeletedCards = localStorage.getItem("deletedCards");
-    if (storedDeletedCards) {
-      setDeletedCards(JSON.parse(storedDeletedCards));
+    const storedArchivedCards = localStorage.getItem("archivedCards");
+    if (storedArchivedCards) {
+      setArchivedCards(JSON.parse(storedArchivedCards));
     }
   }, []);
   return (
@@ -199,23 +199,23 @@ export default function ArchiveList() {
         </svg>
         Delete all achive
       </DeleteBtn>
-      <TrashPageContainer>
-        {deletedCards
+      <ArchivePageContainer>
+        {archivedCards
           .filter((card) => card.boardId === 2)
           .map((card, index) => {
             return (
-              <TrashItem key={index}>
-                <TrashItemInfo>
-                  <TrashItemText>
+              <ArchiveItem key={index}>
+                <ArchiveItemInfo>
+                  <ArchiveItemText>
                     <p>{card.text}</p>
-                  </TrashItemText>
-                  <TrashItemText>
+                  </ArchiveItemText>
+                  <ArchiveItemText>
                     <p>{card.boardId === 2 ? "Done" : card.boardId}</p>
-                  </TrashItemText>
-                  <TrashItemText>
-                    <p>{card.deletionTime}</p>
-                  </TrashItemText>
-                </TrashItemInfo>
+                  </ArchiveItemText>
+                  <ArchiveItemText>
+                    <p>{card.archiveTime}</p>
+                  </ArchiveItemText>
+                </ArchiveItemInfo>
                 <Buttons>
                   <Button onClick={() => onDelete(index)}>
                     <svg
@@ -228,10 +228,10 @@ export default function ArchiveList() {
                     </svg>
                   </Button>
                 </Buttons>
-              </TrashItem>
+              </ArchiveItem>
             );
           })}
-      </TrashPageContainer>
+      </ArchivePageContainer>
     </ThemeProvider>
   );
 }

@@ -1,4 +1,9 @@
-import { IToDo, deletedCardsState, toDoState } from "../atoms";
+import {
+  IToDo,
+  deletedArchiveState,
+  deletedCardsState,
+  toDoState,
+} from "../atoms";
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { useSetRecoilState } from "recoil";
@@ -98,6 +103,7 @@ interface IDraggableCardProps {
 function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   const setToDos = useSetRecoilState(toDoState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
+  const setArchivedCards = useSetRecoilState(deletedArchiveState);
 
   const onEdit = () => {
     const newToDoText = window
@@ -134,24 +140,24 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   };
 
   const onDelete = () => {
-    if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
-      const deleteTime = new Date();
-      const formattedDeletionTime = `${deleteTime.toLocaleDateString("en-US", {
+    if (boardId === 2) {
+      // If the boardId is 2, archive the card instead of deleting it
+      const archiveTime = new Date();
+      const formattedArchiveTime = `${archiveTime.toLocaleDateString("en-US", {
         month: "short",
         day: "2-digit",
-      })} ${deleteTime.toLocaleTimeString("en-US", {
+      })} ${archiveTime.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       })}`;
-
-      // Add the deleted card's information to deletedCardsState
-      setDeletedCards((prev) => [
+      // Add the archived card's information to archivedCardsState
+      setArchivedCards((prev) => [
         ...prev,
         {
           id: toDo.id,
           boardId: boardId,
           text: toDo.text,
-          deletionTime: formattedDeletionTime,
+          archiveTime: formattedArchiveTime,
         },
       ]);
 
@@ -166,9 +172,50 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         boardCopy.toDos = listCopy;
         toDosCopy.splice(boardIndex, 1, boardCopy);
 
-        console.log(boardId, toDo.text, formattedDeletionTime);
         return toDosCopy;
       });
+    } else {
+      // If the boardId is not 2, delete the card
+      if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
+        const deleteTime = new Date();
+        const formattedDeletionTime = `${deleteTime.toLocaleDateString(
+          "en-US",
+          { month: "short", day: "2-digit" }
+        )} ${deleteTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+
+        // Add the deleted card's information to deletedCardsState
+        setDeletedCards((prev) => [
+          ...prev,
+          {
+            id: toDo.id,
+            boardId: boardId,
+            text: toDo.text,
+            deletionTime: formattedDeletionTime,
+          },
+        ]);
+
+        setToDos((prev) => {
+          const toDosCopy = [...prev];
+          const boardIndex = toDosCopy.findIndex(
+            (board) => board.id === boardId
+          );
+          const boardCopy = { ...toDosCopy[boardIndex] };
+          const listCopy = [...boardCopy.toDos];
+          const toDoIndex = boardCopy.toDos.findIndex(
+            (td) => td.id === toDo.id
+          );
+
+          listCopy.splice(toDoIndex, 1);
+          boardCopy.toDos = listCopy;
+          toDosCopy.splice(boardIndex, 1, boardCopy);
+
+          console.log(boardId, toDo.text, formattedDeletionTime);
+          return toDosCopy;
+        });
+      }
     }
   };
 

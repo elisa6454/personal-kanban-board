@@ -24,11 +24,17 @@ export interface DeletedCardInfo {
   id: number;
   boardId: number;
   text: string;
-  deletionTime: string;
+  deletionTime?: string;
+  archiveTime?: string;
 }
 
 export const deletedBoardsState = atom<{ id: number; title: string }[]>({
   key: "deletedBoardsState",
+  default: [],
+});
+
+export const archiveCardsState = atom<{ id: number; title: string }[]>({
+  key: "archiveCardsState",
   default: [],
 });
 
