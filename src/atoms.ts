@@ -1,4 +1,6 @@
+import { collection, doc, onSnapshot } from "firebase/firestore";
 import { atom } from "recoil";
+import { db } from "./firebase";
 
 export const isLightState = atom<boolean>({
   key: "isLight",
@@ -48,7 +50,7 @@ export const homeBoardState = atom<IToDo[]>({
   default: [],
 });
 
-const instanceOfToDo = (object: unknown): object is IToDo => {
+/* const instanceOfToDo = (object: unknown): object is IToDo => {
   return (
     object !== null &&
     object !== undefined &&
@@ -56,9 +58,9 @@ const instanceOfToDo = (object: unknown): object is IToDo => {
     typeof (object as { id: unknown; text: unknown }).id === "number" &&
     typeof (object as { id: unknown; text: unknown }).text === "string"
   );
-};
+}; */
 
-const instanceOfBoard = (object: unknown): object is IBoard => {
+/* const instanceOfBoard = (object: unknown): object is IBoard => {
   return (
     object !== null &&
     object !== undefined &&
@@ -74,15 +76,15 @@ const instanceOfBoard = (object: unknown): object is IBoard => {
       (toDo) => instanceOfToDo(toDo)
     )
   );
-};
+}; */
 
-const instanceOfBoards = (object: unknown): object is IBoard[] => {
+/* const instanceOfBoards = (object: unknown): object is IBoard[] => {
   return (
     Array.isArray(object) && object.every((board) => instanceOfBoard(board))
   );
-};
+}; */
 
-const localStorageEffect =
+/* const localStorageEffect =
   (key: string) =>
   ({ setSelf, onSet }: any) => {
     const savedValue = localStorage.getItem(key);
@@ -104,7 +106,7 @@ const localStorageEffect =
     onSet((newValue: IBoard[]) => {
       localStorage.setItem(key, JSON.stringify(newValue));
     });
-  };
+  }; */
 
 export const toDoState = atom<IBoard[]>({
   key: "toDos",
@@ -125,10 +127,23 @@ export const toDoState = atom<IBoard[]>({
       toDos: [],
     },
   ],
-  effects: [localStorageEffect("trello-clone-to-dos")],
+  effects_UNSTABLE: [
+    ({ setSelf }) => {
+      const unsubscribe = onSnapshot(
+        doc(db, "kanbans", "trello-clone-to-dos"),
+        (snapshot) => {
+          const data = snapshot.exists() ? snapshot.data() : null;
+          if (data) {
+            setSelf([data] as IBoard[]);
+          }
+        }
+      );
+      return () => unsubscribe();
+    },
+  ],
 });
 
-const deletedCardsLocalStorageEffect =
+/* const deletedCardsLocalStorageEffect =
   (key: string) =>
   ({ setSelf, onSet }: any) => {
     const savedValue = localStorage.getItem(key);
@@ -150,40 +165,65 @@ const deletedCardsLocalStorageEffect =
     onSet((newValue: DeletedCardInfo[]) => {
       localStorage.setItem(key, JSON.stringify(newValue));
     });
-  };
+  }; */
+
+export const deletedCardsFirestoreEffect = ({ setSelf }: any) => {
+  const unsubscribe = onSnapshot(doc(db, "deleted-cards"), (doc) => {
+    const data = doc.exists() ? (doc.data() as DeletedCardInfo) : null;
+    if (data) {
+      setSelf([data]);
+    }
+  });
+
+  return () => unsubscribe();
+};
 
 export const deletedCardsState = atom<DeletedCardInfo[]>({
   key: "deletedCardsState",
   default: [],
-  effects_UNSTABLE: [deletedCardsLocalStorageEffect("deleted-cards")],
+  effects_UNSTABLE: [deletedCardsFirestoreEffect("deleted-cards")],
 });
 
-const deletedArchiveLocalStorageEffect =
-  (key: string) =>
-  ({ setSelf, onSet }: any) => {
-    const savedValue = localStorage.getItem(key);
-
-    if (savedValue !== null && savedValue !== undefined) {
-      const json = (raw: string) => {
-        try {
-          return JSON.parse(raw);
-        } catch (error) {
-          return false;
-        }
-      };
-
-      if (json(savedValue) && Array.isArray(json(savedValue))) {
-        setSelf(json(savedValue));
+/* const deletedArchiveFirestoreEffect =
+(key: string) =>
+({ setSelf, onSet }: any) => {
+  const savedValue = localStorage.getItem(key);
+  
+  if (savedValue !== null && savedValue !== undefined) {
+    const json = (raw: string) => {
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return false;
       }
+    };
+    
+    if (json(savedValue) && Array.isArray(json(savedValue))) {
+      setSelf(json(savedValue));
     }
+  }
+  
+  onSet((newValue: DeletedCardInfo[]) => {
+    localStorage.setItem(key, JSON.stringify(newValue));
+  });
+}; */
+const deletedArchiveFirestoreEffect = ({ setSelf }: any) => {
+  const unsubscribe = onSnapshot(
+    collection(db, "archive-cards"),
+    (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setSelf(data);
+    }
+  );
 
-    onSet((newValue: DeletedCardInfo[]) => {
-      localStorage.setItem(key, JSON.stringify(newValue));
-    });
-  };
+  return () => unsubscribe();
+};
 
 export const deletedArchiveState = atom<DeletedCardInfo[]>({
   key: "deletedArchiveState",
   default: [],
-  effects_UNSTABLE: [deletedArchiveLocalStorageEffect("archive-cards")],
+  effects_UNSTABLE: [deletedArchiveFirestoreEffect("archive-cards")],
 });

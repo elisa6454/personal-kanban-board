@@ -1,9 +1,11 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { isLightState, deletedCardsState } from "../atoms";
+import { isLightState, deletedCardsState, DeletedCardInfo } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";
+import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
 
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
@@ -149,7 +151,7 @@ export default function TrashList() {
   const deletedCards = useRecoilValue(deletedCardsState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
 
-  const handleDeleteAllTrash = () => {
+  /*  const handleDeleteAllTrash = () => {
     // Logic to delete all trash items
     setDeletedCards([]);
   };
@@ -159,13 +161,78 @@ export default function TrashList() {
     const updatedDeletedCards = [...deletedCards];
     updatedDeletedCards.splice(index, 1);
     setDeletedCards(updatedDeletedCards);
-  };
-
+  }; 
   useEffect(() => {
     const storedDeletedCards = localStorage.getItem("deletedCards");
     if (storedDeletedCards) {
       setDeletedCards(JSON.parse(storedDeletedCards));
     }
+  }, []); */
+
+  const handleDeleteAllTrash = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "deleted-cards"));
+      // Iterate through each document and delete it
+      querySnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      // Clear the deletedCards state
+      setDeletedCards([]);
+    } catch (error) {
+      console.error("Error deleting all trash items:", error);
+    }
+  };
+
+  const onDelete = async (index: number) => {
+    try {
+      const deletedCard = deletedCards[index];
+      if (!deletedCard) {
+        console.error("Card not found at index", index);
+        return;
+      }
+
+      const documentRef = doc(db, "deleted-cards", deletedCard.id.toString());
+      await deleteDoc(documentRef);
+
+      // Remove the deleted card from the local state
+      const updatedDeletedCards = [...deletedCards];
+      updatedDeletedCards.splice(index, 1);
+      setDeletedCards(updatedDeletedCards);
+    } catch (error) {
+      console.error("Error deleting card:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "deleted-cards"));
+        const data: DeletedCardInfo[] = []; // Initialize an empty array of DeletedCardInfo
+        querySnapshot.forEach((doc) => {
+          const cardData = doc.data();
+          // Perform type assertions to ensure that the document data matches DeletedCardInfo
+          if (
+            typeof cardData.id === "number" &&
+            typeof cardData.boardId === "number" &&
+            typeof cardData.text === "string"
+          ) {
+            // Add the document data to the array
+            data.push({
+              id: cardData.id,
+              boardId: cardData.boardId,
+              text: cardData.text,
+              deletionTime: cardData.deletionTime,
+            });
+          }
+        });
+        setDeletedCards(data);
+      } catch (error) {
+        console.error("Error fetching deleted cards:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -211,7 +278,7 @@ export default function TrashList() {
               d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
             />
           </svg>
-          Delete all trash
+          Delete all
         </DeleteBtn>
       </Navigation>
 

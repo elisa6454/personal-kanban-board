@@ -1,9 +1,11 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { isLightState, deletedArchiveState } from "../atoms";
+import { isLightState, deletedArchiveState, DeletedCardInfo } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { DeleteBtn, Title } from "./auth-components";
 import { useEffect } from "react";
+import { collection, deleteDoc, getDocs, doc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
@@ -137,7 +139,7 @@ export default function ArchiveList() {
   const archivedCards = useRecoilValue(deletedArchiveState);
   const setArchivedCards = useSetRecoilState(deletedArchiveState);
 
-  const handleDeleteAllTrash = () => {
+  /* const handleDeleteAllTrash = () => {
     // Logic to delete all trash items
     setArchivedCards([]);
   };
@@ -147,14 +149,73 @@ export default function ArchiveList() {
     const updatedArchivedCards = [...archivedCards];
     updatedArchivedCards.splice(index, 1);
     setArchivedCards(updatedArchivedCards);
+  }; */
+
+  const handleDeleteAllTrash = async () => {
+    try {
+      const archiveQuerySnapshot = await getDocs(
+        collection(db, "archive-cards")
+      );
+      archiveQuerySnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+      setArchivedCards([]);
+    } catch (error) {
+      console.error("Error deleting all archived cards:", error);
+    }
+  };
+
+  const onDelete = async (index: number) => {
+    try {
+      const documentRef = doc(db, "archive-cards");
+      await deleteDoc(documentRef);
+
+      // Update the state after successfully deleting the document
+      const updatedArchivedCards = [...archivedCards];
+      updatedArchivedCards.splice(index, 1);
+      setArchivedCards(updatedArchivedCards);
+    } catch (error) {
+      console.error("Error deleting archived card:", error);
+    }
   };
 
   useEffect(() => {
-    const storedArchivedCards = localStorage.getItem("archivedCards");
-    if (storedArchivedCards) {
-      setArchivedCards(JSON.parse(storedArchivedCards));
-    }
+    const fetchData = async () => {
+      try {
+        // Reference the "archived-cards" collection in Firestore
+        const querySnapshot = await getDocs(collection(db, "archived-cards"));
+        const data: DeletedCardInfo[] = [];
+
+        // Iterate through each document in the collection
+        querySnapshot.forEach((doc) => {
+          const cardData = doc.data();
+
+          // Ensure that the document data matches ArchivedCardInfo
+          if (
+            typeof cardData.id === "number" &&
+            typeof cardData.boardId === "number" &&
+            typeof cardData.text === "string"
+          ) {
+            // Add the document data to the array
+            data.push({
+              id: cardData.id,
+              boardId: cardData.boardId,
+              text: cardData.text,
+              archiveTime: cardData.archiveTime,
+            });
+          }
+        });
+
+        // Update the state with the fetched data
+        setArchivedCards(data);
+      } catch (error) {
+        console.error("Error fetching archived cards:", error);
+      }
+    };
+
+    fetchData();
   }, []);
+
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
@@ -184,6 +245,7 @@ export default function ArchiveList() {
           </svg>
         )}
       </Button>
+
       <DeleteBtn onClick={handleDeleteAllTrash}>
         <svg
           fill="currentColor"
@@ -197,8 +259,9 @@ export default function ArchiveList() {
             d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
           />
         </svg>
-        Delete all achive
+        Delete all
       </DeleteBtn>
+
       <ArchivePageContainer>
         {archivedCards
           .filter((card) => card.boardId === 2)

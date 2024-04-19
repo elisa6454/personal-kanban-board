@@ -1,3 +1,4 @@
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
   DragDropContext,
   Draggable,
@@ -8,10 +9,11 @@ import {
 } from "react-beautiful-dnd";
 import { useRecoilState } from "recoil";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import { isLightState, toDoState } from "../atoms";
+import { IBoard, isLightState, toDoState } from "../atoms";
 import Board from "./Board";
 import { darkTheme, lightTheme } from "../theme";
 import { useEffect } from "react";
+import { db } from "../firebase";
 
 const Trash = styled.div`
   display: flex;
@@ -178,7 +180,7 @@ function getStyle(style: DraggingStyle | NotDraggingStyle) {
 }
 
 export default function KanbanBoard() {
-  const [toDos, setToDos] = useRecoilState(toDoState);
+  const [toDos, setToDos] = useRecoilState<IBoard[]>(toDoState);
 
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
@@ -190,8 +192,8 @@ export default function KanbanBoard() {
         setIsLight(event.matches);
       });
   });
-
-  const onAdd = () => {
+  // add new board
+  const onAdd = async () => {
     const name = window.prompt("Please input board name.")?.trim();
 
     if (name !== null && name !== undefined) {
@@ -199,9 +201,26 @@ export default function KanbanBoard() {
         alert("Please input the name.");
         return;
       }
-      setToDos((prev) => {
-        return [...prev, { title: name, id: Date.now(), toDos: [] }];
-      });
+
+      try {
+        const newBoard: IBoard = { title: name, id: Date.now(), toDos: [] };
+
+        const docRef = doc(db, "kanbans", "trello-clone-to-dos");
+        const docSnapshot = await getDoc(docRef);
+        const existingData = docSnapshot.data();
+
+        const modifiedData = {
+          ...existingData,
+          toDos: [...(existingData?.toDos || []), newBoard],
+        };
+        await setDoc(docRef, modifiedData);
+
+        setToDos(() => {
+          return [...(existingData?.toDos || []), newBoard];
+        });
+      } catch (error) {
+        console.error("Error adding document: ", error);
+      }
     }
   };
 

@@ -1,3 +1,10 @@
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import React, { useState } from "react";
 import {
@@ -10,6 +17,7 @@ import styled from "styled-components";
 import DragabbleCard from "./DragabbleCard";
 import { IBoard, toDoState } from "../atoms";
 import { useSetRecoilState } from "recoil";
+import { db } from "../firebase";
 
 const Overlay = styled.div`
   width: 100%;
@@ -286,8 +294,8 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
       setIsEnd(false);
     }
   };
-
-  const onValid = ({ toDo }: IForm) => {
+  //create new card
+  const onValid = async ({ toDo }: IForm) => {
     if (toDo.trim() === "") {
       return;
     }
@@ -297,12 +305,22 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
       text: toDo,
     };
 
+    try {
+      await addDoc(
+        collection(db, "kanbans", "trello-clone-to-dos", "todos"),
+        newToDo
+      );
+      console.log("New card added to Firestore");
+    } catch (error) {
+      console.log("Error adding document: ", error);
+    }
+
     setToDos((prev) => {
       const toDosCopy = [...prev];
       const boardIndex = prev.findIndex((b) => b.id === board.id);
       const boardCopy = { ...prev[boardIndex] };
 
-      boardCopy.toDos = [newToDo, ...boardCopy.toDos];
+      boardCopy.toDos = [...boardCopy.toDos, newToDo];
       toDosCopy.splice(boardIndex, 1, boardCopy);
 
       return toDosCopy;
@@ -310,9 +328,11 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
 
     setValue("toDo", "");
   };
-  const onEdit = () => {
+
+  // edit the board
+  const onEdit = async () => {
     const newName = window
-      .prompt(`Enter s new name [${board.title}] board`, board.title)
+      .prompt(`Enters new name [${board.title}] board`, board.title)
       ?.trim();
 
     if (newName !== null && newName !== undefined) {
@@ -325,29 +345,44 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
         return;
       }
 
-      setToDos((prev) => {
-        const toDosCopy = [...prev];
-        const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
-        const boardCopy = { ...toDosCopy[boardIndex] };
+      try {
+        await updateDoc(doc(db, "kanbans", board.id.toString()), {
+          title: newName,
+        });
+        // Update the local state if needed
+        setToDos((prev) => {
+          const toDosCopy = [...prev];
+          const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
+          const boardCopy = { ...toDosCopy[boardIndex] };
 
-        boardCopy.title = newName;
-        toDosCopy.splice(boardIndex, 1, boardCopy);
+          boardCopy.title = newName;
+          toDosCopy.splice(boardIndex, 1, boardCopy);
 
-        return toDosCopy;
-      });
+          return toDosCopy;
+        });
+      } catch (error) {
+        console.error("Error updating document: ", error);
+      }
     }
   };
 
-  const onDelete = () => {
+  //delete the board
+  const onDelete = async () => {
     if (window.confirm(`Are you delete [${board.title}] board?`)) {
-      setToDos((prev) => {
-        const toDosCopy = [...prev];
-        const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
+      try {
+        await deleteDoc(doc(db, "kanbans", board.id.toString()));
+        // Update the local state if needed
+        setToDos((prev) => {
+          const toDosCopy = [...prev];
+          const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
 
-        toDosCopy.splice(boardIndex, 1);
+          toDosCopy.splice(boardIndex, 1);
 
-        return toDosCopy;
-      });
+          return toDosCopy;
+        });
+      } catch (error) {
+        console.error("Error deleting document: ", error);
+      }
     }
   };
 

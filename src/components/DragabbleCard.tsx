@@ -1,4 +1,11 @@
 import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import {
   IToDo,
   deletedArchiveState,
   deletedCardsState,
@@ -8,6 +15,7 @@ import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
+import { db } from "../firebase";
 
 const Button = styled.button`
   display: flex;
@@ -105,7 +113,7 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   const setDeletedCards = useSetRecoilState(deletedCardsState);
   const setArchivedCards = useSetRecoilState(deletedArchiveState);
 
-  const onEdit = () => {
+  const onEdit = async () => {
     const newToDoText = window
       .prompt(
         `Please enter a new task name to edit in ${toDo.text} `,
@@ -119,84 +127,16 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         return;
       }
 
-      setToDos((prev) => {
-        const toDosCopy = [...prev];
-        const boardIndex = toDosCopy.findIndex((board) => board.id === boardId);
-        const boardCopy = { ...toDosCopy[boardIndex] };
-        const listCopy = [...boardCopy.toDos];
-        const toDoIndex = boardCopy.toDos.findIndex((td) => td.id === toDo.id);
+      try {
+        // Construct a reference to the Firestore document representing the task
+        const todoDocRef = doc(db, "todos", `${toDo.id}`);
 
-        listCopy.splice(toDoIndex, 1, {
+        // Update the document with the new task text
+        await updateDoc(todoDocRef, {
           text: newToDoText,
-          id: toDo.id,
         });
 
-        boardCopy.toDos = listCopy;
-        toDosCopy.splice(boardIndex, 1, boardCopy);
-
-        return toDosCopy;
-      });
-    }
-  };
-
-  const onDelete = () => {
-    if (boardId === 2) {
-      // If the boardId is 2, archive the card instead of deleting it
-      const archiveTime = new Date();
-      const formattedArchiveTime = `${archiveTime.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-      })} ${archiveTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-      // Add the archived card's information to archivedCardsState
-      setArchivedCards((prev) => [
-        ...prev,
-        {
-          id: toDo.id,
-          boardId: boardId,
-          text: toDo.text,
-          archiveTime: formattedArchiveTime,
-        },
-      ]);
-
-      setToDos((prev) => {
-        const toDosCopy = [...prev];
-        const boardIndex = toDosCopy.findIndex((board) => board.id === boardId);
-        const boardCopy = { ...toDosCopy[boardIndex] };
-        const listCopy = [...boardCopy.toDos];
-        const toDoIndex = boardCopy.toDos.findIndex((td) => td.id === toDo.id);
-
-        listCopy.splice(toDoIndex, 1);
-        boardCopy.toDos = listCopy;
-        toDosCopy.splice(boardIndex, 1, boardCopy);
-
-        return toDosCopy;
-      });
-    } else {
-      // If the boardId is not 2, delete the card
-      if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
-        const deleteTime = new Date();
-        const formattedDeletionTime = `${deleteTime.toLocaleDateString(
-          "en-US",
-          { month: "short", day: "2-digit" }
-        )} ${deleteTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`;
-
-        // Add the deleted card's information to deletedCardsState
-        setDeletedCards((prev) => [
-          ...prev,
-          {
-            id: toDo.id,
-            boardId: boardId,
-            text: toDo.text,
-            deletionTime: formattedDeletionTime,
-          },
-        ]);
-
+        // Update the local state if needed
         setToDos((prev) => {
           const toDosCopy = [...prev];
           const boardIndex = toDosCopy.findIndex(
@@ -208,13 +148,130 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
             (td) => td.id === toDo.id
           );
 
-          listCopy.splice(toDoIndex, 1);
+          listCopy.splice(toDoIndex, 1, {
+            text: newToDoText,
+            id: toDo.id,
+          });
+
           boardCopy.toDos = listCopy;
           toDosCopy.splice(boardIndex, 1, boardCopy);
 
-          console.log(boardId, toDo.text, formattedDeletionTime);
           return toDosCopy;
         });
+      } catch (error) {
+        console.error("Error updating document:", error);
+      }
+    }
+  };
+
+  const onDelete = async () => {
+    const isArchiveBoard = boardId === 2;
+
+    if (isArchiveBoard) {
+      if (
+        window.confirm(`Are you sure you want to archive "${toDo.text}" task?`)
+      ) {
+        const archiveTime = new Date();
+        const formattedArchiveTime = `${archiveTime.toLocaleDateString(
+          "en-US",
+          { month: "short", day: "2-digit" }
+        )} ${archiveTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+
+        try {
+          await addDoc(collection(db, "archive-cards"), {
+            id: toDo.id,
+            boardId,
+            text: toDo.text,
+            archiveTime: formattedArchiveTime,
+          });
+
+          // Delete the task from Firestore
+          const taskDocRef = doc(db, "todos", `${toDo.id}`);
+          await deleteDoc(taskDocRef);
+
+          setArchivedCards((prev) => [
+            ...prev,
+            {
+              id: toDo.id,
+              boardId,
+              text: toDo.text,
+              archiveTime: formattedArchiveTime,
+            },
+          ]);
+
+          setToDos((prev) => {
+            const toDosCopy = [...prev];
+            const boardIndex = toDosCopy.findIndex(
+              (board) => board.id === boardId
+            );
+            const boardCopy = { ...toDosCopy[boardIndex] };
+            const listCopy = [...boardCopy.toDos];
+            const toDoIndex = boardCopy.toDos.findIndex(
+              (td) => td.id === toDo.id
+            );
+            listCopy.splice(toDoIndex, 1);
+            boardCopy.toDos = listCopy;
+            toDosCopy.splice(boardIndex, 1, boardCopy);
+
+            return toDosCopy;
+          });
+        } catch (error) {
+          console.log("Error archiving card: ", error);
+        }
+      }
+    } else {
+      if (
+        window.confirm(`Are you sure you want to delete "${toDo.text}" task?`)
+      ) {
+        const deletionTime = new Date();
+        const formattedDeletionTime = `${deletionTime.toLocaleDateString(
+          "en-US",
+          { month: "short", day: "2-digit" }
+        )} ${deletionTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+
+        try {
+          await addDoc(collection(db, "deleted-cards"), {
+            id: toDo.id,
+            boardId,
+            text: toDo.text,
+            deletionTime: formattedDeletionTime,
+          });
+
+          setDeletedCards((prev) => [
+            ...prev,
+            {
+              id: toDo.id,
+              boardId,
+              text: toDo.text,
+              deletionTime: formattedDeletionTime,
+            },
+          ]);
+
+          setToDos((prev) => {
+            const toDosCopy = [...prev];
+            const boardIndex = toDosCopy.findIndex(
+              (board) => board.id === boardId
+            );
+            const boardCopy = { ...toDosCopy[boardIndex] };
+            const listCopy = [...boardCopy.toDos];
+            const toDoIndex = boardCopy.toDos.findIndex(
+              (td) => td.id === toDo.id
+            );
+            listCopy.splice(toDoIndex, 1);
+            boardCopy.toDos = listCopy;
+            toDosCopy.splice(boardIndex, 1, boardCopy);
+
+            return toDosCopy;
+          });
+        } catch (error) {
+          console.log("Error deleting card: ", error);
+        }
       }
     }
   };
