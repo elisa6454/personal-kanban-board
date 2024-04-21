@@ -1,10 +1,3 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import React, { useState } from "react";
 import {
@@ -17,7 +10,6 @@ import styled from "styled-components";
 import DragabbleCard from "./DragabbleCard";
 import { IBoard, toDoState } from "../atoms";
 import { useSetRecoilState } from "recoil";
-import { db } from "../firebase";
 
 const Overlay = styled.div`
   width: 100%;
@@ -28,7 +20,6 @@ const Overlay = styled.div`
   position: absolute;
   pointer-events: none;
   z-index: 1;
-
   & > * {
     pointer-events: all;
   }
@@ -44,7 +35,6 @@ const Title = styled.div`
   border-radius: 0.8rem 0.8rem 0 0;
   transition: background-color 0.3s, color 0.3s, box-shadow 0.3s, opacity 0.3s;
   user-select: none;
-
   & > h2 {
     width: 13.5rem;
     margin-top: 0.2rem;
@@ -53,7 +43,6 @@ const Title = styled.div`
     white-space: nowrap;
     transition: width 0.3s;
   }
-
   &.background {
     background-color: ${(props) => props.theme.glassColor};
     backdrop-filter: blur(0.4rem);
@@ -84,19 +73,16 @@ const Button = styled.button`
   border-radius: 0.2rem;
   color: ${(props) => props.theme.secondaryTextColor};
   transition: background-color 0.3s, color 0.3s, opacity 0.3s;
-
   &:hover,
   &:active,
   &:focus {
     cursor: pointer;
     background-color: ${(props) => props.theme.hoverButtonOverlayColor};
   }
-
   &:focus {
     opacity: 1;
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
-
   &:last-child {
     cursor: grab;
   }
@@ -110,11 +96,9 @@ const Form = styled.form`
   justify-content: space-between;
   bottom: 0;
   transition: background-color 0.3s, color 0.3s, opacity 0.3s;
-
   & :focus {
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
-
   & > input {
     width: 100%;
     height: 100%;
@@ -128,7 +112,6 @@ const Form = styled.form`
     color: ${(props) => props.theme.textColor};
     transition: background-color 0.3s, box-shadow 0.3s;
   }
-
   & > button {
     position: absolute;
     right: 0;
@@ -143,7 +126,6 @@ const Form = styled.form`
     justify-content: center;
     color: ${(props) => props.theme.accentColor};
   }
-
   & > input:placeholder-shown + button {
     display: none;
   }
@@ -157,11 +139,9 @@ const ToDos = styled.ul`
   max-height: calc(100vh - 11rem);
   overflow-x: hidden;
   overflow-y: scroll;
-
   &::-webkit-scrollbar {
     width: 0.6rem;
   }
-
   &::-webkit-scrollbar-thumb {
     background-color: ${(props) => props.theme.scrollBarColor};
     border-radius: 0.3rem;
@@ -194,52 +174,40 @@ const Container = styled.div<{ isDraggingOver: boolean }>`
   box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.15);
   margin: 0.5rem;
   transition: background-color 0.3s, box-shadow 0.3s;
-
   &.hovering {
     box-shadow: 0 0.6rem 1.2rem rgba(0, 0, 0, 0.25);
   }
-
   &:has(li.dragging) ${Title}.background, &.dragging ${Title}.background {
     opacity: 0;
   }
-
   &.dragging ${Title} {
     color: white;
-
     & > h2 {
       width: 13.5rem !important;
     }
   }
-
   &:has(li.dragging) ${Form}, &.dragging ${Form} {
     opacity: 0;
   }
-
   &:has(li.dragging) ${Empty}, &.dragging ${Empty} {
     opacity: 0;
   }
-
   &.dragging ${ToDos}::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
   }
-
   &:has(li.dragging) ${Form}.end, &.dragging ${Form}.end {
     opacity: 0.5;
-
     & > input {
       background-color: transparent;
       box-shadow: none;
-
       &::placeholder {
         color: white;
       }
     }
   }
-
   &:not(:hover):not(:focus-within) ${Buttons}, &.dragging ${Buttons} {
     opacity: 0;
   }
-
   &:hover ${Title} > h2,
   &:focus-within ${Title} > h2 {
     width: 7.1rem;
@@ -294,8 +262,8 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
       setIsEnd(false);
     }
   };
-  //create new card
-  const onValid = async ({ toDo }: IForm) => {
+
+  const onValid = ({ toDo }: IForm) => {
     if (toDo.trim() === "") {
       return;
     }
@@ -304,16 +272,6 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
       id: Date.now(),
       text: toDo,
     };
-
-    try {
-      await addDoc(
-        collection(db, "kanbans", "trello-clone-to-dos", "todos"),
-        newToDo
-      );
-      console.log("New card added to Firestore");
-    } catch (error) {
-      console.log("Error adding document: ", error);
-    }
 
     setToDos((prev) => {
       const toDosCopy = [...prev];
@@ -328,11 +286,9 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
 
     setValue("toDo", "");
   };
-
-  // edit the board
-  const onEdit = async () => {
+  const onEdit = () => {
     const newName = window
-      .prompt(`Enters new name [${board.title}] board`, board.title)
+      .prompt(`Enter s new name [${board.title}] board`, board.title)
       ?.trim();
 
     if (newName !== null && newName !== undefined) {
@@ -345,44 +301,29 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
         return;
       }
 
-      try {
-        await updateDoc(doc(db, "kanbans", board.id.toString()), {
-          title: newName,
-        });
-        // Update the local state if needed
-        setToDos((prev) => {
-          const toDosCopy = [...prev];
-          const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
-          const boardCopy = { ...toDosCopy[boardIndex] };
+      setToDos((prev) => {
+        const toDosCopy = [...prev];
+        const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
+        const boardCopy = { ...toDosCopy[boardIndex] };
 
-          boardCopy.title = newName;
-          toDosCopy.splice(boardIndex, 1, boardCopy);
+        boardCopy.title = newName;
+        toDosCopy.splice(boardIndex, 1, boardCopy);
 
-          return toDosCopy;
-        });
-      } catch (error) {
-        console.error("Error updating document: ", error);
-      }
+        return toDosCopy;
+      });
     }
   };
 
-  //delete the board
-  const onDelete = async () => {
+  const onDelete = () => {
     if (window.confirm(`Are you delete [${board.title}] board?`)) {
-      try {
-        await deleteDoc(doc(db, "kanbans", board.id.toString()));
-        // Update the local state if needed
-        setToDos((prev) => {
-          const toDosCopy = [...prev];
-          const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
+      setToDos((prev) => {
+        const toDosCopy = [...prev];
+        const boardIndex = toDosCopy.findIndex((b) => b.id === board.id);
 
-          toDosCopy.splice(boardIndex, 1);
+        toDosCopy.splice(boardIndex, 1);
 
-          return toDosCopy;
-        });
-      } catch (error) {
-        console.error("Error deleting document: ", error);
-      }
+        return toDosCopy;
+      });
     }
   };
 

@@ -135,10 +135,12 @@ export const BtnLogo = styled.img`
 export const DeleteBtn = styled.button`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background-color: white;
   border: none;
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
   font-size: 18px;
   color: #f44336;
   cursor: pointer;
