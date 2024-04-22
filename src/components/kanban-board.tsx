@@ -14,7 +14,7 @@ import Board from "./Board";
 import { darkTheme, lightTheme } from "../theme";
 import { useEffect } from "react";
 import { db } from "../firebase";
-
+import RandomQuote from "./quotes";
 const Trash = styled.div`
   display: flex;
   align-items: center;
@@ -30,7 +30,6 @@ const Trash = styled.div`
   font-size: 10px;
   z-index: 5;
   transition: transform 0.3s;
-
   & > div {
     margin-bottom: 0.5rem;
     color: rgba(, 0, 0, 0.5);
@@ -106,7 +105,6 @@ const GlobalStyle = createGlobalStyle`
 		transform: translateY(3.75rem) scale(1.2);
 	}
 `;
-
 const Title = styled.h1`
   display: flex;
   margin: 0px;
@@ -114,7 +112,6 @@ const Title = styled.h1`
   font-weight: 600;
   transition: color 0.3s;
 `;
-
 const Boards = styled.div`
   display: flex;
   align-items: flex-start;
@@ -125,7 +122,6 @@ const Boards = styled.div`
   margin-top: 7rem;
   margin-left: 2rem;
 `;
-
 const Buttons = styled.div`
   display: flex;
   align-items: center;
@@ -133,7 +129,6 @@ const Buttons = styled.div`
   transition: color 0.3s;
   color: ${(props) => props.theme.secondaryTextColor};
 `;
-
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -146,18 +141,15 @@ const Button = styled.button`
   transition: color 0.3s;
   padding: 0;
   border-radius: 0.2rem;
-
   &:hover,
   &:focus {
     cursor: pointer;
     color: ${(props) => props.theme.accentColor};
   }
-
   &:focus {
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
-
 const Navigation = styled.nav`
   display: flex;
   position: fixed;
@@ -167,7 +159,6 @@ const Navigation = styled.nav`
   width: 100vw;
   color: ${(props) => props.theme.textColor};
 `;
-
 function getStyle(style: DraggingStyle | NotDraggingStyle) {
   if (style?.transform) {
     const axisLockX = `${style.transform.split(",").shift()}, 0px)`;
@@ -178,13 +169,10 @@ function getStyle(style: DraggingStyle | NotDraggingStyle) {
   }
   return style;
 }
-
 export default function KanbanBoard() {
   const [toDos, setToDos] = useRecoilState<IBoard[]>(toDoState);
-
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
-
   useEffect(() => {
     window
       .matchMedia("(prefers-color-scheme: light")
@@ -195,26 +183,21 @@ export default function KanbanBoard() {
   // add new board
   const onAdd = async () => {
     const name = window.prompt("Please input board name.")?.trim();
-
     if (name !== null && name !== undefined) {
       if (name === "") {
         alert("Please input the name.");
         return;
       }
-
       try {
         const newBoard: IBoard = { title: name, id: Date.now(), toDos: [] };
-
         const docRef = doc(db, "kanbans", "trello-clone-to-dos");
         const docSnapshot = await getDoc(docRef);
         const existingData = docSnapshot.data();
-
         const modifiedData = {
           ...existingData,
           toDos: [...(existingData?.toDos || []), newBoard],
         };
         await setDoc(docRef, modifiedData);
-
         setToDos(() => {
           return [...(existingData?.toDos || []), newBoard];
         });
@@ -223,27 +206,22 @@ export default function KanbanBoard() {
       }
     }
   };
-
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (source.droppableId === "boards") {
       if (!destination) return;
       if (source.index === destination.index) return;
-
       // move within the same column
       if (source.index !== destination.index) {
         setToDos((prev) => {
           const toDosCopy = [...prev];
           const prevBoard = toDosCopy[source.index];
-
           toDosCopy.splice(source.index, 1);
           toDosCopy.splice(destination.index, 0, prevBoard);
-
           return toDosCopy;
         });
       }
     } else if (source.droppableId !== "boards") {
       if (!destination) return;
-
       // remove from a column and add to another
       if (destination.droppableId === "trash") {
         setToDos((prev) => {
@@ -253,11 +231,9 @@ export default function KanbanBoard() {
           );
           const boardCopy = { ...toDosCopy[boardIndex] };
           const listCopy = [...boardCopy.toDos];
-
           listCopy.splice(source.index, 1);
           boardCopy.toDos = listCopy;
           toDosCopy.splice(boardIndex, 1, boardCopy);
-
           return toDosCopy;
         });
         return;
@@ -272,13 +248,10 @@ export default function KanbanBoard() {
           const boardCopy = { ...toDosCopy[boardIndex] };
           const listCopy = [...boardCopy.toDos];
           const prevToDo = boardCopy.toDos[source.index];
-
           listCopy.splice(source.index, 1);
           listCopy.splice(destination.index, 0, prevToDo);
-
           boardCopy.toDos = listCopy;
           toDosCopy.splice(boardIndex, 1, boardCopy);
-
           return toDosCopy;
         });
       }
@@ -286,41 +259,31 @@ export default function KanbanBoard() {
       if (source.droppableId !== destination.droppableId) {
         setToDos((prev) => {
           const toDosCopy = [...prev];
-
           const sourceBoardIndex = toDosCopy.findIndex(
             (board) => board.id + "" === source.droppableId.split("-")[1]
           );
           const destinationBoardIndex = toDosCopy.findIndex(
             (board) => board.id + "" === destination.droppableId.split("-")[1]
           );
-
           const sourceBoardCopy = { ...toDosCopy[sourceBoardIndex] };
           const destinationBoardCopy = { ...toDosCopy[destinationBoardIndex] };
-
           const sourceListCopy = [...sourceBoardCopy.toDos];
           const destinationListCopy = [...destinationBoardCopy.toDos];
-
           const prevToDo = sourceBoardCopy.toDos[source.index];
-
           sourceListCopy.splice(source.index, 1);
           destinationListCopy.splice(destination.index, 0, prevToDo);
-
           sourceBoardCopy.toDos = sourceListCopy;
           destinationBoardCopy.toDos = destinationListCopy;
-
           toDosCopy.splice(sourceBoardIndex, 1, sourceBoardCopy);
           toDosCopy.splice(destinationBoardIndex, 1, destinationBoardCopy);
-
           return toDosCopy;
         });
       }
     }
   };
-
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
-
       <Navigation>
         <Title>My Board</Title>
         <Buttons>
@@ -361,7 +324,7 @@ export default function KanbanBoard() {
           </Button>
         </Buttons>
       </Navigation>
-
+      <RandomQuote />
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="boards" direction="horizontal" type="BOARDS">
           {(provided) => (
@@ -386,7 +349,6 @@ export default function KanbanBoard() {
             </Boards>
           )}
         </Droppable>
-
         <Droppable droppableId="trash" type="BOARD">
           {(provided) => (
             <div>
