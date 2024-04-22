@@ -132,26 +132,3 @@ export const BtnLogo = styled.img`
 `;
 
 /* -- trash & archive  delete all btn -- */
-export const DeleteBtn = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  font-size: 18px;
-  color: #f44336;
-  cursor: pointer;
-  svg {
-    width: 30px;
-    margin-right: 7px;
-  }
-  margin-left: auto;
-  transition: background-color 0.3s, color 0.3s;
-  &: hover {
-    background-color: #f44336;
-    color: white;
-  }
-`;

@@ -123,37 +123,47 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   const onDelete = () => {
     if (boardId === 2) {
       // If the boardId is 2, archive the card instead of deleting it
-      const archiveTime = new Date();
-      const formattedArchiveTime = `${archiveTime.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-      })} ${archiveTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-      // Add the archived card's information to archivedCardsState
-      setArchivedCards((prev) => [
-        ...prev,
-        {
-          id: toDo.id,
-          boardId: boardId,
-          text: toDo.text,
-          archiveTime: formattedArchiveTime,
-        },
-      ]);
+      if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
+        const archiveTime = new Date();
+        const formattedArchiveTime = `${archiveTime.toLocaleDateString(
+          "en-US",
+          {
+            month: "short",
+            day: "2-digit",
+          }
+        )} ${archiveTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
 
-      setToDos((prev) => {
-        const toDosCopy = [...prev];
-        const boardIndex = toDosCopy.findIndex((board) => board.id === boardId);
-        const boardCopy = { ...toDosCopy[boardIndex] };
-        const listCopy = [...boardCopy.toDos];
-        const toDoIndex = boardCopy.toDos.findIndex((td) => td.id === toDo.id);
-        listCopy.splice(toDoIndex, 1);
-        boardCopy.toDos = listCopy;
-        toDosCopy.splice(boardIndex, 1, boardCopy);
+        // Add the archived card's information to archivedCardsState
+        setArchivedCards((prev) => [
+          ...prev,
+          {
+            id: toDo.id,
+            boardId: boardId,
+            text: toDo.text,
+            archiveTime: formattedArchiveTime,
+          },
+        ]);
 
-        return toDosCopy;
-      });
+        setToDos((prev) => {
+          const toDosCopy = [...prev];
+          const boardIndex = toDosCopy.findIndex(
+            (board) => board.id === boardId
+          );
+          const boardCopy = { ...toDosCopy[boardIndex] };
+          const listCopy = [...boardCopy.toDos];
+          const toDoIndex = boardCopy.toDos.findIndex(
+            (td) => td.id === toDo.id
+          );
+          listCopy.splice(toDoIndex, 1);
+          boardCopy.toDos = listCopy;
+          toDosCopy.splice(boardIndex, 1, boardCopy);
+
+          return toDosCopy;
+        });
+      }
     } else {
       // If the boardId is not 2, delete the card
       if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
@@ -198,7 +208,6 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
       }
     }
   };
-
   return (
     <Draggable draggableId={"todo-" + toDo.id} index={index}>
       {(provided, snapshot) => (

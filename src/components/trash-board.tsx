@@ -2,8 +2,9 @@ import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { isLightState, deletedCardsState } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
-import { DeleteBtn, Title } from "./auth-components";
+import { Title } from "./auth-components";
 import { useEffect } from "react";
+
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
 	h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -67,25 +68,38 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
-const ButtonContainer = styled.div`
+const DeleteBtn = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-`;
-const Buttons = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  transition: color 0.3s;
-  color: ${(props) => props.theme.secondaryTextColor};
+  justify-content: space-between;
+  background-color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: #f44336;
+  cursor: pointer;
+
+  svg {
+    width: 30px;
+    margin-right: 5px;
+  }
+  margin-left: auto;
+  transition: background-color 0.3s, color 0.3s;
+  &: hover {
+    background-color: #f44336;
+    color: white;
+  }
 `;
 const ToggleThemeButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  width: 2rem;
-  height: 2rem;
+  font-size: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-top: 10px;
   background: none;
   border: none;
   transition: color 0.3s;
@@ -99,8 +113,24 @@ const ToggleThemeButton = styled.button`
   &:focus {
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
+  svg {
+    width: 10rem;
+    height: 10rem;
+  }
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+const Buttons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  transition: color 0.3s;
+  color: ${(props) => props.theme.secondaryTextColor};
+`;
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -125,7 +155,21 @@ const Button = styled.button`
 const MainContainer = styled.div`
   overflow-y: auto;
   max-height: 80vh;
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: gray;
+    border-radius: 4px;
+    border: 2px solid gray;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: gray};
+  }
 `;
+
 const TrashItem = styled.div`
   display: flex;
   align-items: center;
@@ -165,14 +209,18 @@ export default function TrashList() {
   const deletedCards = useRecoilValue(deletedCardsState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
   const handleDeleteAllTrash = () => {
-    // Logic to delete all trash items
-    setDeletedCards([]);
+    if (window.confirm("Are you sure you want to delete all trash?")) {
+      setDeletedCards([]);
+    }
   };
+
   const onDelete = (index: number) => {
-    //  Logic to remove the selected item from the list
-    const updatedDeletedCards = [...deletedCards];
-    updatedDeletedCards.splice(index, 1);
-    setDeletedCards(updatedDeletedCards);
+    const toDo = deletedCards[index];
+    if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
+      const updatedDeletedCards = [...deletedCards];
+      updatedDeletedCards.splice(index, 1);
+      setDeletedCards(updatedDeletedCards);
+    }
   };
   useEffect(() => {
     const storedDeletedCards = localStorage.getItem("deletedCards");
@@ -199,7 +247,7 @@ export default function TrashList() {
                 d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
               />
             </svg>
-            Delete all trash
+            Delete all
           </DeleteBtn>
           <ToggleThemeButton onClick={toggleTheme}>
             {isLight ? (
