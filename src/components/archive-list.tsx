@@ -3,7 +3,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { isLightState, deletedArchiveState } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
 import { Title } from "./auth-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
@@ -224,20 +224,10 @@ const SearchIcon = styled.svg`
   color: #333;
 `;
 
-const CalendarIcon = styled.svg`
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  color: #333;
-`;
-
-const ToggleCalendarViewButton = styled.button`
-  svg {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    color: #333;
-  }
+const TotalItems = styled.span`
+  font-size: 16px;
+  color: ${(props) => props.theme.textColor};
+  margin-left: 10px;
 `;
 
 export default function ArchiveList() {
@@ -246,6 +236,8 @@ export default function ArchiveList() {
   const archivedCards = useRecoilValue(deletedArchiveState);
   const setArchivedCards = useSetRecoilState(deletedArchiveState);
   const [searchItem, setSearchItem] = useState("");
+
+  const totalArchivedItems = archivedCards.length;
 
   const handleDeleteAllTrash = () => {
     if (window.confirm("Are you sure you want to delete all archive?")) {
@@ -270,6 +262,7 @@ export default function ArchiveList() {
   }, []);
 
   // Filter archive items based on search
+
   const filteredArchiveItems = archivedCards.filter((item) =>
     item.text.toLowerCase().includes(searchItem.toLowerCase())
   );
@@ -277,34 +270,40 @@ export default function ArchiveList() {
   const handleSearchItem = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchItem(event.target.value);
   };
-  const [isCalendarView, setIsCalendarView] = useState(false);
 
-  const toggleCalendarView = () => {
-    setIsCalendarView((prev) => !prev);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleDateSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setSelectedDate(event.target.value);
   };
+
+  const formatDate = (archiveTime: string | undefined): string => {
+    if (!archiveTime) return ""; // Handle the case where archiveTime is undefined
+    const [datePart] = archiveTime.split(" "); // Split the date and time parts
+    const [month, day, year] = datePart.split("/"); // Split the date into month, day, and year
+    return `${year}-${month}-${day}`; // Format the date as "YYYY-MM-DD"
+  };
+
+  const filteredArchiveItemsByDate = archivedCards.filter((item) =>
+    selectedDate ? formatDate(item.archiveTime) === selectedDate : true
+  );
 
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
       <Container>
         <Title>Archive Board</Title>
+        <TotalItems>Total Items: {totalArchivedItems}</TotalItems>
         <ButtonContainer>
-          <ToggleCalendarViewButton onClick={toggleCalendarView}>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path d="M5.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H6a.75.75 0 0 1-.75-.75V12ZM6 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H6ZM7.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H8a.75.75 0 0 1-.75-.75V12ZM8 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H8ZM9.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H10a.75.75 0 0 1-.75-.75V10ZM10 11.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V12a.75.75 0 0 0-.75-.75H10ZM9.25 14a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H10a.75.75 0 0 1-.75-.75V14ZM12 9.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V10a.75.75 0 0 0-.75-.75H12ZM11.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H12a.75.75 0 0 1-.75-.75V12ZM12 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H12ZM13.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H14a.75.75 0 0 1-.75-.75V10ZM14 11.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V12a.75.75 0 0 0-.75-.75H14Z" />
-              <path
-                clipRule="evenodd"
-                fillRule="evenodd"
-                d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
-              />
-            </svg>
-          </ToggleCalendarViewButton>
-
+          <input
+            ref={inputRef}
+            type="date"
+            onChange={handleDateSelect}
+            value={selectedDate ?? ""}
+          />
           <DeleteBtn onClick={handleDeleteAllTrash}>
             <svg
               fill="currentColor"
@@ -370,9 +369,39 @@ export default function ArchiveList() {
 
       <ScrollableContainer>
         <ArchivePageContainer>
-          {searchItem
-            ? // Render filtered items when there's a search term
-              filteredArchiveItems.map((card, index) => {
+          {selectedDate
+            ? // Render filtered items by date when a date is selected
+              filteredArchiveItemsByDate.map((card, index) => {
+                return (
+                  <ArchiveItem key={index}>
+                    <ArchiveItemInfo>
+                      <ArchiveItemText>
+                        <p>{card.text}</p>
+                      </ArchiveItemText>
+                      <ArchiveItemText>
+                        <p>{card.boardId === 2 ? "Done" : card.boardId}</p>
+                      </ArchiveItemText>
+                      <ArchiveItemText>
+                        <p>{card.archiveTime}</p>
+                      </ArchiveItemText>
+                    </ArchiveItemInfo>
+                    <Buttons>
+                      <Button onClick={() => onDelete(index)}>
+                        <svg
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                          aria-hidden="true"
+                        >
+                          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                        </svg>
+                      </Button>
+                    </Buttons>
+                  </ArchiveItem>
+                );
+              })
+            : searchItem // Render filtered items when there's a search term
+            ? filteredArchiveItems.map((card, index) => {
                 return (
                   <ArchiveItem key={index}>
                     <ArchiveItemInfo>

@@ -128,7 +128,8 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         const formattedArchiveTime = `${archiveTime.toLocaleDateString(
           "en-US",
           {
-            month: "short",
+            year: "numeric",
+            month: "2-digit",
             day: "2-digit",
           }
         )} ${archiveTime.toLocaleTimeString("en-US", {

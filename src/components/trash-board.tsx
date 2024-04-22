@@ -68,6 +68,12 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
+const TotalItems = styled.span`
+  font-size: 16px;
+  color: ${(props) => props.theme.textColor};
+  margin-left: 10px;
+`;
+
 const DeleteBtn = styled.div`
   display: flex;
   align-items: center;
@@ -208,6 +214,7 @@ export default function TrashList() {
   const toggleTheme = () => setIsLight((current) => !current);
   const deletedCards = useRecoilValue(deletedCardsState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
+  const totalArchivedItems = deletedCards.length;
   const handleDeleteAllTrash = () => {
     if (window.confirm("Are you sure you want to delete all trash?")) {
       setDeletedCards([]);
@@ -233,6 +240,7 @@ export default function TrashList() {
       <GlobalStyle />
       <Navigation>
         <Title>Trash Board</Title>
+        <TotalItems>Total Items: {totalArchivedItems}</TotalItems>
         <ButtonContainer>
           <DeleteBtn onClick={handleDeleteAllTrash}>
             <svg

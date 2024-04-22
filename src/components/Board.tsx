@@ -433,6 +433,7 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
               </button>
             </Form>
           </Overlay>
+
           <ToDos
             ref={provided.innerRef}
             {...provided.droppableProps}
