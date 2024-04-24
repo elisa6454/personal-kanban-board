@@ -1,4 +1,3 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
   DragDropContext,
   Draggable,
@@ -9,12 +8,13 @@ import {
 } from "react-beautiful-dnd";
 import { useRecoilState } from "recoil";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import { IBoard, isLightState, toDoState } from "../atoms";
+import {IBoard, isLightState} from "../atoms";
 import Board from "./Board";
 import { darkTheme, lightTheme } from "../theme";
 import { useEffect } from "react";
-import { db } from "../firebase";
-import RandomQuote from "./quotes";
+import { saveDataToFirestore, toDoState } from "../firebaseUtils";
+import { auth } from "../firebase";
+
 const Trash = styled.div`
   display: flex;
   align-items: center;
@@ -30,9 +30,10 @@ const Trash = styled.div`
   font-size: 10px;
   z-index: 5;
   transition: transform 0.3s;
+
   & > div {
     margin-bottom: 0.5rem;
-    color: rgba(, 0, 0, 0.5);
+    color: rgba(0, 0, 0, 0.5);
   }
 `;
 const GlobalStyle = createGlobalStyle`
@@ -105,6 +106,7 @@ const GlobalStyle = createGlobalStyle`
 		transform: translateY(3.75rem) scale(1.2);
 	}
 `;
+
 const Title = styled.h1`
   display: flex;
   margin: 0px;
@@ -112,6 +114,7 @@ const Title = styled.h1`
   font-weight: 600;
   transition: color 0.3s;
 `;
+
 const Boards = styled.div`
   display: flex;
   align-items: flex-start;
@@ -122,6 +125,7 @@ const Boards = styled.div`
   margin-top: 7rem;
   margin-left: 2rem;
 `;
+
 const Buttons = styled.div`
   display: flex;
   align-items: center;
@@ -129,6 +133,7 @@ const Buttons = styled.div`
   transition: color 0.3s;
   color: ${(props) => props.theme.secondaryTextColor};
 `;
+
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -141,15 +146,18 @@ const Button = styled.button`
   transition: color 0.3s;
   padding: 0;
   border-radius: 0.2rem;
+
   &:hover,
   &:focus {
     cursor: pointer;
     color: ${(props) => props.theme.accentColor};
   }
+
   &:focus {
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
+
 const Navigation = styled.nav`
   display: flex;
   position: fixed;
@@ -159,6 +167,7 @@ const Navigation = styled.nav`
   width: 100vw;
   color: ${(props) => props.theme.textColor};
 `;
+
 function getStyle(style: DraggingStyle | NotDraggingStyle) {
   if (style?.transform) {
     const axisLockX = `${style.transform.split(",").shift()}, 0px)`;
@@ -169,10 +178,13 @@ function getStyle(style: DraggingStyle | NotDraggingStyle) {
   }
   return style;
 }
+
 export default function KanbanBoard() {
   const [toDos, setToDos] = useRecoilState<IBoard[]>(toDoState);
+
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
+
   useEffect(() => {
     window
       .matchMedia("(prefers-color-scheme: light")
@@ -180,110 +192,147 @@ export default function KanbanBoard() {
         setIsLight(event.matches);
       });
   });
-  // add new board
+
   const onAdd = async () => {
-    const name = window.prompt("Please input board name.")?.trim();
-    if (name !== null && name !== undefined) {
-      if (name === "") {
-        alert("Please input the name.");
-        return;
-      }
-      try {
-        const newBoard: IBoard = { title: name, id: Date.now(), toDos: [] };
-        const docRef = doc(db, "kanbans", "trello-clone-to-dos");
-        const docSnapshot = await getDoc(docRef);
-        const existingData = docSnapshot.data();
-        const modifiedData = {
-          ...existingData,
-          toDos: [...(existingData?.toDos || []), newBoard],
-        };
-        await setDoc(docRef, modifiedData);
-        setToDos(() => {
-          return [...(existingData?.toDos || []), newBoard];
-        });
-      } catch (error) {
-        console.error("Error adding document: ", error);
-      }
+    const user = auth.currentUser;
+    const boardName = window.prompt("Please input board name.")?.trim();
+
+    if (!user || !boardName) {
+      alert("Please ensure you're logged in and input a valid board name.");
+      return;
     }
+
+    const userId = auth.currentUser; // UID of currently logged in user(현재 로그인한 사용자의 UID)
+
+    // Create a new board object
+    const newBoard = {
+      title: boardName,
+      id: Date.now(), // Generate a unique ID (ex- use Date.now())
+      toDos: [], // Initial empty toDos array
+    };
+
+    // Update Recoil state instead of adding directly to Firestore
+    setToDos((oldToDos: IBoard[]): IBoard[] => {
+      const updatedToDos = [...oldToDos, newBoard];
+      // After updating status save to Firestore
+      saveDataToFirestore(userId, "trello-clone-to-dos", updatedToDos);
+      return updatedToDos;
+    });
   };
+
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (source.droppableId === "boards") {
       if (!destination) return;
       if (source.index === destination.index) return;
+
       // move within the same column
       if (source.index !== destination.index) {
-        setToDos((prev) => {
+        setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
           const prevBoard = toDosCopy[source.index];
+
           toDosCopy.splice(source.index, 1);
           toDosCopy.splice(destination.index, 0, prevBoard);
+
           return toDosCopy;
         });
       }
     } else if (source.droppableId !== "boards") {
       if (!destination) return;
+
       // remove from a column and add to another
       if (destination.droppableId === "trash") {
-        setToDos((prev) => {
+        setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
           const boardIndex = toDosCopy.findIndex(
-            (board) => board.id + "" === source.droppableId.split("-")[1]
+            (board: IBoard) => board.id + "" === source.droppableId.split("-")[1]
           );
-          const boardCopy = { ...toDosCopy[boardIndex] };
-          const listCopy = [...boardCopy.toDos];
-          listCopy.splice(source.index, 1);
-          boardCopy.toDos = listCopy;
-          toDosCopy.splice(boardIndex, 1, boardCopy);
+          const board = toDosCopy[boardIndex];
+          if (board) {
+            const boardCopy = { ...board };
+            const listCopy = [...boardCopy.toDos];
+
+            listCopy.splice(source.index, 1);
+            boardCopy.toDos = listCopy;
+            toDosCopy.splice(boardIndex, 1, boardCopy);
+          } else {
+            console.error(`Invalid board index: ${boardIndex}`);
+            return prev;
+          }
+
           return toDosCopy;
         });
         return;
       }
       //  moving task between lists in the same column
       if (source.droppableId === destination.droppableId) {
-        setToDos((prev) => {
+        setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
           const boardIndex = toDosCopy.findIndex(
-            (board) => board.id + "" === source.droppableId.split("-")[1]
+            (board: IBoard) => board.id + "" === source.droppableId.split("-")[1]
           );
           const boardCopy = { ...toDosCopy[boardIndex] };
           const listCopy = [...boardCopy.toDos];
           const prevToDo = boardCopy.toDos[source.index];
+
           listCopy.splice(source.index, 1);
           listCopy.splice(destination.index, 0, prevToDo);
+
           boardCopy.toDos = listCopy;
           toDosCopy.splice(boardIndex, 1, boardCopy);
+
           return toDosCopy;
         });
       }
       // cross board movement
       if (source.droppableId !== destination.droppableId) {
-        setToDos((prev) => {
+        setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
+
           const sourceBoardIndex = toDosCopy.findIndex(
             (board) => board.id + "" === source.droppableId.split("-")[1]
           );
           const destinationBoardIndex = toDosCopy.findIndex(
             (board) => board.id + "" === destination.droppableId.split("-")[1]
           );
-          const sourceBoardCopy = { ...toDosCopy[sourceBoardIndex] };
-          const destinationBoardCopy = { ...toDosCopy[destinationBoardIndex] };
-          const sourceListCopy = [...sourceBoardCopy.toDos];
-          const destinationListCopy = [...destinationBoardCopy.toDos];
-          const prevToDo = sourceBoardCopy.toDos[source.index];
-          sourceListCopy.splice(source.index, 1);
-          destinationListCopy.splice(destination.index, 0, prevToDo);
-          sourceBoardCopy.toDos = sourceListCopy;
-          destinationBoardCopy.toDos = destinationListCopy;
-          toDosCopy.splice(sourceBoardIndex, 1, sourceBoardCopy);
-          toDosCopy.splice(destinationBoardIndex, 1, destinationBoardCopy);
-          return toDosCopy;
+
+          const checksourceBoard = toDosCopy[sourceBoardIndex];
+          const checkdestinationBoard = toDosCopy[destinationBoardIndex];
+
+          if (!checksourceBoard || !checkdestinationBoard) {
+            console.error(
+              `Invalid board index: ${sourceBoardIndex} or ${destinationBoardIndex}`
+            );
+            return prev;
+          } else {
+            const sourceBoardCopy = { ...toDosCopy[sourceBoardIndex] };
+            const destinationBoardCopy = { ...toDosCopy[destinationBoardIndex] };
+
+            const sourceListCopy = [...sourceBoardCopy.toDos];
+            const destinationListCopy = [...destinationBoardCopy.toDos];
+
+            const prevToDo = sourceBoardCopy.toDos[source.index];
+
+            sourceListCopy.splice(source.index, 1);
+            destinationListCopy.splice(destination.index, 0, prevToDo);
+
+            sourceBoardCopy.toDos = sourceListCopy;
+            destinationBoardCopy.toDos = destinationListCopy;
+
+            toDosCopy.splice(sourceBoardIndex, 1, sourceBoardCopy);
+            toDosCopy.splice(destinationBoardIndex, 1, destinationBoardCopy);
+
+            return toDosCopy;
+          }
         });
       }
     }
   };
+
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
+
       <Navigation>
         <Title>My Board</Title>
         <Buttons>
@@ -324,31 +373,33 @@ export default function KanbanBoard() {
           </Button>
         </Buttons>
       </Navigation>
-      <RandomQuote />
+
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="boards" direction="horizontal" type="BOARDS">
           {(provided) => (
             <Boards ref={provided.innerRef} {...provided.droppableProps}>
-              {toDos.map((board, index) => (
-                <Draggable
-                  draggableId={"board-" + board.id}
-                  key={board.id}
-                  index={index}
-                >
-                  {(provided, snapshot) => (
-                    <Board
-                      board={board}
-                      parentProvided={provided}
-                      isHovering={snapshot.isDragging}
-                      style={getStyle(provided.draggableProps.style!)}
-                    />
-                  )}
-                </Draggable>
-              ))}
+              {toDos &&
+                toDos.map((board, index) => (
+                  <Draggable
+                    draggableId={"board-" + board.id}
+                    key={board.id}
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <Board
+                        board={board}
+                        parentProvided={provided}
+                        isHovering={snapshot.isDragging}
+                        style={getStyle(provided.draggableProps.style!)}
+                      />
+                    )}
+                  </Draggable>
+                ))}
               {provided.placeholder}
             </Boards>
           )}
         </Droppable>
+
         <Droppable droppableId="trash" type="BOARD">
           {(provided) => (
             <div>
@@ -363,19 +414,6 @@ export default function KanbanBoard() {
                     clipRule="evenodd"
                     fillRule="evenodd"
                     d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
-                  />
-                </svg>
-                <svg
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path d="M2 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z" />
-                  <path
-                    clipRule="evenodd"
-                    fillRule="evenodd"
-                    d="M2 7.5h16l-.811 7.71a2 2 0 0 1-1.99 1.79H4.802a2 2 0 0 1-1.99-1.79L2 7.5Zm5.22 1.72a.75.75 0 0 1 1.06 0L10 10.94l1.72-1.72a.75.75 0 1 1 1.06 1.06L11.06 12l1.72 1.72a.75.75 0 1 1-1.06 1.06L10 13.06l-1.72 1.72a.75.75 0 0 1-1.06-1.06L8.94 12l-1.72-1.72a.75.75 0 0 1 0-1.06Z"
                   />
                 </svg>
               </Trash>

@@ -2,9 +2,11 @@
 import { atom } from "recoil"; // Firebase settings file
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "./firebase";
+import {IBoard} from "./atoms";
+
 
 // Initial data defining
-const defaultToDos = [
+const defaultToDos: IBoard[] = [
   {
     title: "To Do",
     id: 0,
@@ -22,7 +24,7 @@ const defaultToDos = [
   },
 ];
 
-export const toDoState = atom({
+export const toDoState = atom<IBoard[]>({
   key: "toDos",
   default: [], // load it from Firestore, initialize it with an empty array
   effects: [

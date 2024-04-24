@@ -8,6 +8,9 @@ import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
+import { saveDataToFirestore } from "../firebaseUtils";
+import { auth } from "../firebase";
+
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -21,12 +24,14 @@ const Button = styled.button`
   background-color: transparent;
   border: none;
   font-size: 1.2rem;
+
   &:hover,
   &:active,
   &:focus-within {
     background-color: ${(props) => props.theme.hoverButtonOverlayColor};
   }
 `;
+
 const Buttons = styled.div`
   display: flex;
   position: absolute;
@@ -35,6 +40,7 @@ const Buttons = styled.div`
   justify-content: space-between;
   gap: 0.125rem;
 `;
+
 const Card = styled.li`
   background-color: ${(props) => props.theme.cardColor};
   padding: 0.8rem;
@@ -47,18 +53,22 @@ const Card = styled.li`
   user-select: none;
   position: relative;
   font-size: 1rem;
+
   &.dragging {
     box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.25);
   }
+
   &.dragging-over-trash {
     background-color: tomato !important;
     color: white;
   }
+
   &:focus-within {
     background-color: ${(props) => props.theme.accentColor};
     outline: 0.15rem solid ${(props) => props.theme.textColor};
     color: white;
   }
+
   & > :first-child {
     width: 100%;
     text-overflow: ellipsis;
@@ -67,25 +77,31 @@ const Card = styled.li`
     transition: width 0.3s;
     margin-top: 0.1rem;
   }
+
   &:not(:hover):not(:focus-within) ${Button} {
     opacity: 0;
   }
+
   &:hover > :first-child,
   &:focus-within > :first-child {
     width: 8.75rem;
   }
+
   &:focus-within ${Button} {
     color: white;
   }
+
   &:focus-within ${Button}:focus {
     outline: 0.15rem solid white;
   }
 `;
+
 interface IDraggableCardProps {
   toDo: IToDo;
   index: number;
   boardId: number;
 }
+
 function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
   const setToDos = useSetRecoilState(toDoState);
   const setDeletedCards = useSetRecoilState(deletedCardsState);
@@ -98,23 +114,30 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         toDo.text
       )
       ?.trim();
+
     if (newToDoText !== null && newToDoText !== undefined) {
       if (newToDoText === "") {
         alert("Please enter the name.");
         return;
       }
+
       setToDos((prev) => {
         const toDosCopy = [...prev];
         const boardIndex = toDosCopy.findIndex((board) => board.id === boardId);
         const boardCopy = { ...toDosCopy[boardIndex] };
         const listCopy = [...boardCopy.toDos];
         const toDoIndex = boardCopy.toDos.findIndex((td) => td.id === toDo.id);
+
         listCopy.splice(toDoIndex, 1, {
           text: newToDoText,
           id: toDo.id,
         });
+
         boardCopy.toDos = listCopy;
         toDosCopy.splice(boardIndex, 1, boardCopy);
+
+        saveDataToFirestore(auth.currentUser, "trello-clone-to-dos", toDosCopy);
+
         return toDosCopy;
       });
     }
@@ -171,7 +194,7 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
         const deleteTime = new Date();
         const formattedDeletionTime = `${deleteTime.toLocaleDateString(
           "en-US",
-          { month: "short", day: "2-digit" }
+          { year: "numeric", month: "short", day: "2-digit" }
         )} ${deleteTime.toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -209,6 +232,7 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
       }
     }
   };
+
   return (
     <Draggable draggableId={"todo-" + toDo.id} index={index}>
       {(provided, snapshot) => (
@@ -249,4 +273,5 @@ function DraggableCard({ toDo, index, boardId }: IDraggableCardProps) {
     </Draggable>
   );
 }
+
 export default React.memo(DraggableCard);
