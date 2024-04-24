@@ -1,106 +1,82 @@
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { isLightState, deletedArchiveState } from "../atoms";
+import { isLightState } from "../atoms";
 import { darkTheme, lightTheme } from "../theme";
-import { Title } from "./auth-components";
-import { useEffect, useRef, useState } from "react";
+import { DeleteBtn, Title } from "./auth-components";
+import { ChangeEvent, useEffect, useState } from "react";
+import { deletedArchiveState } from "../firebaseUtils";
 
 const GlobalStyle = createGlobalStyle`
-  html, body, div, span, applet, object, iframe,
-  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-  a, abbr, acronym, address, big, cite, code,
-  del, dfn, em, img, ins, kbd, q, s, samp,
-  small, strike, strong, sub, sup, tt, var,
-  b, u, i, center,
-  dl, dt, dd, ol, ul, li,
-  fieldset, form, label, legend,
-  table, caption, tbody, tfoot, thead, tr, th, td,
-  article, aside, canvas, details, embed,
-  figure, figcaption, footer, header, hgroup,
-  menu, nav, output, ruby, section, summary,
-  time, mark, audio, video {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-size: 100%;
-    font: inherit;
-    vertical-align: baseline;
-  }
-  /* HTML5 display-role reset for older browsers */
-  article, aside, details, figcaption, figure,
-  footer, header, hgroup, menu, nav, section {
-    display: block;
-  }
-  body {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    line-height: 1;
-    font-family: "Pretendard", sans-serif;
-    background-color: ${(props) => props.theme.bgColor};
-    color: ${(props) => props.theme.textColor};
-    transition: background-color 0.3s, color 0.3s;
-    overflow-y: hidden;
-  }
-  ol, ul {
-    list-style: none;
-  }
-  blockquote, q {
-    quotes: none;
-  }
-  blockquote:before, blockquote:after,
-  q:before, q:after {
-    content: '';
-    content: none;
-  }
-  table {
-    border-collapse: collapse;
-    border-spacing: 0;
-  }
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-  * {
-    box-sizing: border-box;
-  }
-  input, button {
-    font-family: "Pretendard", sans-serif;
-    color: inherit;
-  }
-`;
-const DeleteBtn = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 15px;
-  margin-top: 10px;
-  font-size: 15px;
-  color: #f44336;
-  cursor: pointer;
-
-  svg {
-    width: 30px;
-    margin-right: 5px;
-  }
-  margin-left: auto;
-  transition: background-color 0.3s, color 0.3s;
-  &: hover {
-    background-color: #f44336;
-    color: white;
-  }
+	html, body, div, span, applet, object, iframe,
+	h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+	a, abbr, acronym, address, big, cite, code,
+	del, dfn, em, img, ins, kbd, q, s, samp,
+	small, strike, strong, sub, sup, tt, var,
+	b, u, i, center,
+	dl, dt, dd, ol, ul, li,
+	fieldset, form, label, legend,
+	table, caption, tbody, tfoot, thead, tr, th, td,
+	article, aside, canvas, details, embed,
+	figure, figcaption, footer, header, hgroup,
+	menu, nav, output, ruby, section, summary,
+	time, mark, audio, video {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-size: 100%;
+		font: inherit;
+		vertical-align: baseline;
+	}
+	/* HTML5 display-role reset for older browsers */
+	article, aside, details, figcaption, figure,
+	footer, header, hgroup, menu, nav, section {
+		display: block;
+	}
+	body {
+		display: flex;
+		align-items: flex-start;
+		justify-content: flex-start;
+		line-height: 1;
+		font-family: "Pretendard", sans-serif;
+		background-color: ${(props) => props.theme.bgColor};
+		color: ${(props) => props.theme.textColor};
+		transition: background-color 0.3s, color 0.3s;
+		overflow-y: hidden;
+	}
+	ol, ul {
+		list-style: none;
+	}
+	blockquote, q {
+		quotes: none;
+	}
+	blockquote:before, blockquote:after,
+	q:before, q:after {
+		content: '';
+		content: none;
+	}
+	table {
+		border-collapse: collapse;
+		border-spacing: 0;
+	}
+	a {
+		text-decoration: none;
+		color: inherit;
+	}
+	* {
+		box-sizing: border-box;
+	}
+	input, button {
+		font-family: "Pretendard", sans-serif;
+		color: inherit;
+	}
 `;
 const ToggleThemeButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  width: 2.5rem;
-  height: 2.5rem;
-  margin-top: 10px;
+  font-size: 1.8rem;
+  width: 2rem;
+  height: 2rem;
   background: none;
   border: none;
   transition: color 0.3s;
@@ -114,17 +90,15 @@ const ToggleThemeButton = styled.button`
   &:focus {
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
-  svg {
-    width: 10rem;
-    height: 10rem;
-  }
 `;
 const Container = styled.div``;
+
 const ButtonContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
 `;
+
 const Buttons = styled.div`
   display: flex;
   align-items: center;
@@ -132,6 +106,7 @@ const Buttons = styled.div`
   transition: color 0.3s;
   color: ${(props) => props.theme.secondaryTextColor};
 `;
+
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -153,6 +128,7 @@ const Button = styled.button`
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
+
 const ArchiveItem = styled.div`
   display: flex;
   align-items: center;
@@ -167,33 +143,23 @@ const ArchiveItem = styled.div`
 `;
 const ScrollableContainer = styled.div`
   overflow-y: auto;
-  max-height: 80vh;
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: gray;
-    border-radius: 4px;
-    border: 2px solid gray;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: gray;
-  }
+  max-height: 80vh; /* Adjust the max height as needed */
 `;
+
 const ArchiveItemInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
   overflow: hidden;
 `;
+
 const ArchiveItemText = styled.p`
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
+
 const ArchivePageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -201,15 +167,16 @@ const ArchivePageContainer = styled.div`
   gap: 1rem;
   padding: 2rem;
 `;
+
 const SearchItem = styled.div`
   display: flex;
   align-items: center;
   border: 2px solid #ccc;
   border-radius: 20px;
   padding: 5px 10px;
-  margin-top: 20px;
   background-color: #fff;
 `;
+
 const SearchInput = styled.input`
   border: none;
   outline: none;
@@ -217,6 +184,7 @@ const SearchInput = styled.input`
   padding: 8px;
   font-size: 16px;
 `;
+
 const SearchIcon = styled.svg`
   width: 20px;
   height: 20px;
@@ -224,36 +192,25 @@ const SearchIcon = styled.svg`
   color: #333;
 `;
 
-const TotalItems = styled.span`
-  font-size: 16px;
-  color: ${(props) => props.theme.textColor};
-  margin-left: 10px;
-`;
-
 export default function ArchiveList() {
   const [isLight, setIsLight] = useRecoilState(isLightState);
   const toggleTheme = () => setIsLight((current) => !current);
+
   const archivedCards = useRecoilValue(deletedArchiveState);
   const setArchivedCards = useSetRecoilState(deletedArchiveState);
-  const [searchItem, setSearchItem] = useState("");
-
-  const totalArchivedItems = archivedCards.length;
 
   const handleDeleteAllTrash = () => {
-    if (window.confirm("Are you sure you want to delete all archive?")) {
-      setArchivedCards([]);
-    }
+    // Logic to delete all trash items
+    setArchivedCards([]);
   };
 
   const onDelete = (index: number) => {
     //  Logic to remove the selected item from the list
-    const toDo = archivedCards[index];
-    if (window.confirm(`Are you delete [${toDo.text}] task?`)) {
-      const updatedArchivedCards = [...archivedCards];
-      updatedArchivedCards.splice(index, 1);
-      setArchivedCards(updatedArchivedCards);
-    }
+    const updatedArchivedCards = [...archivedCards];
+    updatedArchivedCards.splice(index, 1);
+    setArchivedCards(updatedArchivedCards);
   };
+
   useEffect(() => {
     const storedArchivedCards = localStorage.getItem("archivedCards");
     if (storedArchivedCards) {
@@ -261,49 +218,45 @@ export default function ArchiveList() {
     }
   }, []);
 
-  // Filter archive items based on search
+  const [searchItem, setSearchItem] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
-  const filteredArchiveItems = archivedCards.filter((item) =>
-    item.text.toLowerCase().includes(searchItem.toLowerCase())
-  );
-
-  const handleSearchItem = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchItem(event.target.value);
-  };
-
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleDateSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
+  const handleDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(event.target.value);
   };
+  const filteredArchiveItems = archivedCards
+    .filter((item) =>
+      item.text.toLowerCase().includes(searchItem.toLowerCase())
+    )
+    .filter((item) => {
+      if (item.archiveTime) {
+        const archiveDate = new Date(item.archiveTime);
+        const formattedArchiveDate = `${archiveDate.getFullYear()}-${String(
+          archiveDate.getMonth() + 1
+        ).padStart(2, "0")}-${String(archiveDate.getDate()).padStart(2, "0")}`;
+        return formattedArchiveDate === selectedDate;
+      }
+      return false;
+    });
 
-  const formatDate = (archiveTime: string | undefined): string => {
-    if (!archiveTime) return ""; // Handle the case where archiveTime is undefined
-    const [datePart] = archiveTime.split(" "); // Split the date and time parts
-    const [month, day, year] = datePart.split("/"); // Split the date into month, day, and year
-    return `${year}-${month}-${day}`; // Format the date as "YYYY-MM-DD"
+  const handleSearchItem = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchItem(event.target.value);
   };
-
-  const filteredArchiveItemsByDate = archivedCards.filter((item) =>
-    selectedDate ? formatDate(item.archiveTime) === selectedDate : true
-  );
 
   return (
     <ThemeProvider theme={isLight ? lightTheme : darkTheme}>
       <GlobalStyle />
       <Container>
         <Title>Archive Board</Title>
-        <TotalItems>Total Items: {totalArchivedItems}</TotalItems>
         <ButtonContainer>
           <input
-            ref={inputRef}
             type="date"
-            onChange={handleDateSelect}
-            value={selectedDate ?? ""}
+            id="archiveDate"
+            name="archiveDate"
+            value={selectedDate || ""}
+            onChange={handleDateChange}
           />
+
           <DeleteBtn onClick={handleDeleteAllTrash}>
             <svg
               fill="currentColor"
@@ -317,7 +270,7 @@ export default function ArchiveList() {
                 d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
               />
             </svg>
-            Delete all
+            Delete all achive
           </DeleteBtn>
           <ToggleThemeButton onClick={toggleTheme}>
             {isLight ? (
@@ -346,6 +299,7 @@ export default function ArchiveList() {
           </ToggleThemeButton>
         </ButtonContainer>
       </Container>
+
       <SearchItem>
         <SearchInput
           type="text"
@@ -369,39 +323,9 @@ export default function ArchiveList() {
 
       <ScrollableContainer>
         <ArchivePageContainer>
-          {selectedDate
-            ? // Render filtered items by date when a date is selected
-              filteredArchiveItemsByDate.map((card, index) => {
-                return (
-                  <ArchiveItem key={index}>
-                    <ArchiveItemInfo>
-                      <ArchiveItemText>
-                        <p>{card.text}</p>
-                      </ArchiveItemText>
-                      <ArchiveItemText>
-                        <p>{card.boardId === 2 ? "Done" : card.boardId}</p>
-                      </ArchiveItemText>
-                      <ArchiveItemText>
-                        <p>{card.archiveTime}</p>
-                      </ArchiveItemText>
-                    </ArchiveItemInfo>
-                    <Buttons>
-                      <Button onClick={() => onDelete(index)}>
-                        <svg
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                          aria-hidden="true"
-                        >
-                          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                        </svg>
-                      </Button>
-                    </Buttons>
-                  </ArchiveItem>
-                );
-              })
-            : searchItem // Render filtered items when there's a search term
-            ? filteredArchiveItems.map((card, index) => {
+          {searchItem
+            ? // Render filtered items when there's a search term
+              filteredArchiveItems.map((card, index) => {
                 return (
                   <ArchiveItem key={index}>
                     <ArchiveItemInfo>

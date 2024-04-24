@@ -2,7 +2,7 @@
 import { atom } from "recoil"; // Firebase settings file
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "./firebase";
-import {IBoard} from "./atoms";
+import {IBoard, DeletedCardInfo} from "./atoms";
 
 
 // Initial data defining
@@ -79,3 +79,108 @@ export const loadDataFromFirestore = async (userId: any, key: any) => {
     return null;
   }
 };
+
+export const deletedCardsState = atom<DeletedCardInfo[]>({
+  key: "deletedCardsState",
+  default: [],
+  effects: [
+    ({setSelf, onSet, trigger}) => {
+      const userId = auth.currentUser;
+      const key = "deleted-cards";
+
+      if (trigger === "get") {
+        loadDeletedDataFromFirestore(userId, key).then((loadedData) => {
+          if (loadedData) {
+            setSelf(loadedData);
+          }
+        });
+      }
+
+      onSet((newValue) => {
+        saveDeletedDataToFirestore(userId, key, newValue);
+      });
+
+    },
+  ],
+});
+
+// Store Deleted Data in Firestore
+export const saveDeletedDataToFirestore = async (userId: any, key: any, data: any) => {
+    try {
+        const dataString = JSON.stringify(data);
+        await setDoc(doc(db, `users/${userId}/deletedData`, key), { data: dataString });
+        console.log("Data saved successfully");
+    } catch (error) {
+        console.error("Error saving data: ", error);
+    }
+};
+
+// Load Deleted Data from Firestore
+export const loadDeletedDataFromFirestore = async (userId: any, key: any) => {
+    try {
+        const docRef = doc(db, `users/${userId}/deletedData`, key);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const dataString = docSnap.data().data;
+            return JSON.parse(dataString);
+        } else {
+            console.log("No such document, inserting default data.");
+            await saveDeletedDataToFirestore(userId, key, []);
+            return [];
+        }
+    } catch (error) {
+        console.error("Error loading or inserting data: ", error);
+        return null;
+    }
+}
+
+export const deletedArchiveState = atom<DeletedCardInfo[]>({
+    key: "deletedArchiveState",
+    default: [],
+    effects: [
+        ({setSelf, onSet, trigger}) => {
+            const userId = auth.currentUser;
+            const key = "deleted-archive";
+
+            if (trigger === "get") {
+                loadArchiveDataFromFirestore(userId, key).then((loadedData) => {
+                    if (loadedData) {
+                        setSelf(loadedData);
+                    }
+                });
+            }
+
+            onSet((newValue) => {
+                saveArchiveDataToFirestore(userId, key, newValue);
+            });
+        }
+    ],
+});
+
+export const saveArchiveDataToFirestore = async (userId: any, key: any, data: any) => {
+    try {
+        const dataString = JSON.stringify(data);
+        await setDoc(doc(db, `users/${userId}/archiveData`, key), { data: dataString });
+        console.log("Data saved successfully");
+    } catch (error) {
+        console.error("Error saving data: ", error);
+    }
+}
+
+export const loadArchiveDataFromFirestore = async (userId: any, key: any) => {
+    try {
+        const docRef = doc(db, `users/${userId}/archiveData`, key);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const dataString = docSnap.data().data;
+            return JSON.parse(dataString);
+        } else {
+            console.log("No such document, inserting default data.");
+            await saveArchiveDataToFirestore(userId, key, []);
+            return [];
+        }
+    } catch (error) {
+        console.error("Error loading or inserting data: ", error);
+        return null;
+    }
+}
