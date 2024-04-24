@@ -8,8 +8,9 @@ import {
 } from "react-beautiful-dnd";
 import { useRecoilState } from "recoil";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import {IBoard, isLightState} from "../atoms";
+import { IBoard, isLightState } from "../atoms";
 import Board from "./Board";
+import RandomQuote from "./quotes";
 import { darkTheme, lightTheme } from "../theme";
 import { useEffect } from "react";
 import { saveDataToFirestore, toDoState } from "../firebaseUtils";
@@ -245,7 +246,8 @@ export default function KanbanBoard() {
         setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
           const boardIndex = toDosCopy.findIndex(
-            (board: IBoard) => board.id + "" === source.droppableId.split("-")[1]
+            (board: IBoard) =>
+              board.id + "" === source.droppableId.split("-")[1]
           );
           const board = toDosCopy[boardIndex];
           if (board) {
@@ -269,7 +271,8 @@ export default function KanbanBoard() {
         setToDos((prev: IBoard[]): IBoard[] => {
           const toDosCopy = [...prev];
           const boardIndex = toDosCopy.findIndex(
-            (board: IBoard) => board.id + "" === source.droppableId.split("-")[1]
+            (board: IBoard) =>
+              board.id + "" === source.droppableId.split("-")[1]
           );
           const boardCopy = { ...toDosCopy[boardIndex] };
           const listCopy = [...boardCopy.toDos];
@@ -306,7 +309,9 @@ export default function KanbanBoard() {
             return prev;
           } else {
             const sourceBoardCopy = { ...toDosCopy[sourceBoardIndex] };
-            const destinationBoardCopy = { ...toDosCopy[destinationBoardIndex] };
+            const destinationBoardCopy = {
+              ...toDosCopy[destinationBoardIndex],
+            };
 
             const sourceListCopy = [...sourceBoardCopy.toDos];
             const destinationListCopy = [...destinationBoardCopy.toDos];
@@ -373,6 +378,7 @@ export default function KanbanBoard() {
           </Button>
         </Buttons>
       </Navigation>
+      <RandomQuote />
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="boards" direction="horizontal" type="BOARDS">
