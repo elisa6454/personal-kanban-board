@@ -70,6 +70,16 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
+const DateInput = styled.input`
+  padding: 0.3rem;
+  margin-top: 15px;
+  font-size: 1rem;
+  border: 2px solid ${(props) => props.theme.secondaryTextColor};
+  border-radius: 0.5rem;
+  outline: none;
+  color: black;
+`;
+
 const DeleteBtn = styled.div`
   display: flex;
   align-items: center;
@@ -77,7 +87,7 @@ const DeleteBtn = styled.div`
   background-color: white;
   border: none;
   border-radius: 10px;
-  padding: 15px;
+  padding: 0.75rem 1rem;
   margin-top: 10px;
   font-size: 15px;
   color: #f44336;
@@ -119,11 +129,15 @@ const ToggleThemeButton = styled.button`
     height: 10rem;
   }
 `;
-const Container = styled.div``;
+const Container = styled.div`
+  padding: -2px;
+`;
 const ButtonContainer = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
+  margin-top: 1rem;
 `;
 const Buttons = styled.div`
   display: flex;
@@ -168,6 +182,8 @@ const ArchiveItem = styled.div`
 const ScrollableContainer = styled.div`
   overflow-y: auto;
   max-height: 80vh;
+  padding: 1rem;
+  padding-bottom : 8rem;
   &::-webkit-scrollbar {
     width: 10px;
   }
@@ -183,6 +199,8 @@ const ScrollableContainer = styled.div`
 const ArchiveItemInfo = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 1rem;
   overflow: hidden;
 `;
@@ -197,14 +215,14 @@ const ArchivePageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 2rem;
+  padding: 1rem;
 `;
 const SearchItem = styled.div`
   display: flex;
   align-items: center;
   border: 2px solid #ccc;
   border-radius: 20px;
-  padding: 5px 10px;
+  padding: 7px;
   margin-top: 20px;
   background-color: #fff;
 `;
@@ -212,7 +230,7 @@ const SearchInput = styled.input`
   border: none;
   outline: none;
   flex-grow: 1;
-  padding: 8px;
+  padding: 5px;
   font-size: 16px;
 `;
 const SearchIcon = styled.svg`
@@ -223,9 +241,9 @@ const SearchIcon = styled.svg`
 `;
 
 const TotalItems = styled.span`
-  font-size: 16px;
-  color: ${(props) => props.theme.textColor};
-  margin-left: 10px;
+  font-size: 1.2rem;
+  color: ${(props) => props.theme.secondaryTextColor};
+  margin-top: 0.5rem;
 `;
 
 export default function ArchiveList() {
@@ -296,7 +314,7 @@ export default function ArchiveList() {
         <Title>Archive Board</Title>
         <TotalItems>Total Items: {totalArchivedItems}</TotalItems>
         <ButtonContainer>
-          <input
+          <DateInput
             ref={inputRef}
             type="date"
             onChange={handleDateSelect}

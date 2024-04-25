@@ -71,8 +71,8 @@ const GlobalStyle = createGlobalStyle`
 `;
 const TotalItems = styled.span`
   font-size: 16px;
-  color: ${(props) => props.theme.textColor};
-  margin-left: 10px;
+  color: ${(props) => props.theme.secondaryTextColor};
+  margin: 10px;
 `;
 
 const DeleteBtn = styled.div`
@@ -187,6 +187,8 @@ const TrashItem = styled.div`
 const TrashItemInfo = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 1rem;
   overflow: hidden;
 `;
