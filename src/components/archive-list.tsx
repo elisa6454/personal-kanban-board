@@ -269,6 +269,8 @@ export default function ArchiveList() {
       const updatedArchivedCards = [...archivedCards];
       updatedArchivedCards.splice(index, 1);
       setArchivedCards(updatedArchivedCards);
+
+      setSearchItem("");
     }
   };
   useEffect(() => {
@@ -423,7 +425,6 @@ export default function ArchiveList() {
                 return (
                   <ArchiveItem key={index}>
                     <ArchiveItemInfo>
-                      Expand Down
                       <ArchiveItemText>
                         <p>{card.text}</p>
                       </ArchiveItemText>
