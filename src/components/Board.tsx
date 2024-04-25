@@ -10,8 +10,8 @@ import styled from "styled-components";
 import DragabbleCard from "./DragabbleCard";
 import { IBoard, toDoState } from "../atoms";
 import { useSetRecoilState } from "recoil";
-import {saveDataToFirestore} from "../firebaseUtils";
-import {auth} from "../firebase";
+import { saveDataToFirestore } from "../firebaseUtils";
+import { auth } from "../firebase";
 
 const Overlay = styled.div`
   width: 100%;
@@ -304,7 +304,7 @@ function Board({ board, parentProvided, isHovering, style }: IBoardProps) {
       const boardIndex = prev.findIndex((b) => b.id === board.id);
       const boardCopy = { ...prev[boardIndex] };
 
-      boardCopy.toDos = [newToDo, ...boardCopy.toDos];
+      boardCopy.toDos = [...boardCopy.toDos, newToDo];
       toDosCopy.splice(boardIndex, 1, boardCopy);
 
       saveDataToFirestore(auth.currentUser, "trello-clone-to-dos", toDosCopy);
