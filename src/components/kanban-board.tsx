@@ -22,7 +22,8 @@ const Trash = styled.div`
   justify-content: center;
   position: fixed;
   top: -3.75rem;
-  left: calc(50vw - 3.5rem);
+  left: 50%;
+  transform: translateX(-50%);
   width: 7.5rem;
   height: 3.75rem;
   border-radius: 0 0 100rem 100rem;
@@ -30,13 +31,25 @@ const Trash = styled.div`
   box-shadow: -0.1rem 0 0.4rem rgb(210 77 77 / 15%);
   font-size: 10px;
   z-index: 5;
-  transition: transform 0.3s;
+  transition: transform 0.3s, opacity 0.3s;
+  opacity: 0;
 
-  & > div {
-    margin-bottom: 0.5rem;
-    color: rgba(0, 0, 0, 0.5);
+  &.active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(3.75rem);
   }
 `;
+
+const TrashIcon = styled.svg`
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: black;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
+
 const GlobalStyle = createGlobalStyle`
 	html, body, div, span, applet, object, iframe,
 	h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -101,9 +114,11 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 	&:has(.dragging) ${Trash} {
+    opacity: 1;
 		transform: translateY(3.75rem);
 	}
 	&:has(.dragging-over-trash) ${Trash} {
+    opacity: 1;
 		transform: translateY(3.75rem) scale(1.2);
 	}
 `;
@@ -119,12 +134,10 @@ const Title = styled.h1`
 const Boards = styled.div`
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
-  min-width: calc(100vw - 4rem);
-  margin-right: 2rem;
+  width: calc(100vw - 4rem);
+  margin: 1rem;
+  margin-top: 5rem;
   height: calc(100vh - 10rem);
-  margin-top: 7rem;
-  margin-left: 2rem;
 `;
 
 const Buttons = styled.div`
@@ -162,11 +175,16 @@ const Button = styled.button`
 const Navigation = styled.nav`
   display: flex;
   position: fixed;
-  padding: 2.5rem 7rem;
+  top: 4rem;
+  left: 10;
+  width: calc(100% - 5rem);
+  height: 4rem;
+  padding: 0 2rem;
   align-items: center;
   justify-content: space-between;
-  width: 100vw;
+  background-color: ${(props) => props.theme.bgColor};
   color: ${(props) => props.theme.textColor};
+  z-index: 1000;
 `;
 
 function getStyle(style: DraggingStyle | NotDraggingStyle) {
@@ -410,20 +428,22 @@ export default function KanbanBoard() {
           {(provided) => (
             <div>
               <Trash ref={provided.innerRef} {...provided.droppableProps}>
-                <svg
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    clipRule="evenodd"
-                    fillRule="evenodd"
-                    d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
-                  />
-                </svg>
+                <TrashIcon>
+                  <svg
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      fillRule="evenodd"
+                      d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z"
+                    />
+                  </svg>
+                </TrashIcon>
+                {provided.placeholder}
               </Trash>
-              {provided.placeholder}
             </div>
           )}
         </Droppable>

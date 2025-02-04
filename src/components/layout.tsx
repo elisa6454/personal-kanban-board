@@ -11,7 +11,7 @@ const Wrapper = styled.div`
 
 const Menu = styled.div`
   position: fixed;
-  top: 50px;
+  top: 100px;
   left: 0;
   width: 80px;
   height: calc(100vh - 50px);
