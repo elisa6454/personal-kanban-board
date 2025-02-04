@@ -3,16 +3,18 @@ import { styled } from "styled-components";
 import { auth } from "../firebase";
 
 const Wrapper = styled.div`
-  display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr 4fr;
-  height: 100%;
-  padding: 50px 0px;
   width: 100%;
   max-width: 860px;
+  margin-left: 80px;
+  padding: 50px 0px;
 `;
 
 const Menu = styled.div`
+  position: fixed;
+  top: 50px;
+  left: 0;
+  width: 80px;
+  height: calc(100vh - 50px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,71 +43,79 @@ const MenuItem = styled.div`
   }
 `;
 
+const menuItems = [
+  {
+    to: "/",
+    icon: (
+      <svg
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          clipRule="evenodd"
+          fillRule="evenodd"
+          d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z"
+        />
+      </svg>
+    ),
+  },
+  {
+    to: "/trash",
+    icon: (
+      <svg
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          clipRule="evenodd"
+          fillRule="evenodd"
+          d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    to: "/archive",
+    icon: (
+      <svg
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path d="M2 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z" />
+        <path
+          clipRule="evenodd"
+          fillRule="evenodd"
+          d="M2 7.5h16l-.811 7.71a2 2 0 0 1-1.99 1.79H4.802a2 2 0 0 1-1.99-1.79L2 7.5ZM7 11a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z"
+        />
+      </svg>
+    ),
+  },
+];
+
 export default function Layout() {
-  const navigate = useNavigate(); // can call it like this in the onClick event
+  const navigate = useNavigate();
   const onLogOut = async () => {
-    // ask for user bofore logout
     const ok = confirm("Are you sure you want to log out?");
     if (ok) {
-      await auth.signOut(); // logging out from firebase
+      await auth.signOut();
       navigate("/login");
     }
   };
+
   return (
     <Wrapper>
       <Menu>
-        <Link to="/">
-          <MenuItem>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                clipRule="evenodd"
-                fillRule="evenodd"
-                d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z"
-              />
-            </svg>
-          </MenuItem>
-        </Link>
-
-        <Link to="/trash">
-          <MenuItem>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                clipRule="evenodd"
-                fillRule="evenodd"
-                d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-              />
-            </svg>
-          </MenuItem>
-        </Link>
-
-        <Link to="/archive">
-          <MenuItem>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path d="M2 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z" />
-              <path
-                clipRule="evenodd"
-                fillRule="evenodd"
-                d="M2 7.5h16l-.811 7.71a2 2 0 0 1-1.99 1.79H4.802a2 2 0 0 1-1.99-1.79L2 7.5ZM7 11a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z"
-              />
-            </svg>
-          </MenuItem>
-        </Link>
-
+        {menuItems.map((menuItem, index) => (
+          <Link to={menuItem.to} key={index}>
+            <MenuItem>{menuItem.icon}</MenuItem>
+          </Link>
+        ))}
         <MenuItem onClick={onLogOut} className="log-out">
           <svg
             fill="currentColor"
