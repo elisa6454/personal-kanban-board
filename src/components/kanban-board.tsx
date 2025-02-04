@@ -182,7 +182,6 @@ const Navigation = styled.nav`
   padding: 0 2rem;
   align-items: center;
   justify-content: space-between;
-  background-color: ${(props) => props.theme.bgColor};
   color: ${(props) => props.theme.textColor};
   z-index: 1000;
 `;
