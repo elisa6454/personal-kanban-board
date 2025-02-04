@@ -133,11 +133,14 @@ const Container = styled.div`
   padding: -2px;
 `;
 const ButtonContainer = styled.div`
+  position: fixed;
+  top: 3rem;
+  right: 4rem;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
+  width: auto;
+  z-index: 1000;
 `;
 const Buttons = styled.div`
   display: flex;

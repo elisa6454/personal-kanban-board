@@ -69,6 +69,51 @@ const GlobalStyle = createGlobalStyle`
 		color: inherit;
 	}
 `;
+const MainContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+`;
+const TrashItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  width: 500px;
+  max-width: 600px;
+  margin-bottom: 1rem;
+  background-color: ${(props) => props.theme.secondaryBgColor};
+  border-radius: 0.5rem;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
+`;
+const TrashItemInfo = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  overflow: hidden;
+`;
+const TrashItemText = styled.p`
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+const TrashPageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 60vh; /* 최소 높이 설정 (리스트가 없어도 영역 유지) */
+  padding: 2rem;
+  gap: 2rem;
+`;
 const TotalItems = styled.span`
   font-size: 16px;
   color: ${(props) => props.theme.secondaryTextColor};
@@ -125,9 +170,14 @@ const ToggleThemeButton = styled.button`
   }
 `;
 const ButtonContainer = styled.div`
+  position: fixed;
+  top: 3rem;
+  right: 4rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: auto;
+  z-index: 1000;
 `;
 const Buttons = styled.div`
   display: flex;
@@ -157,54 +207,7 @@ const Button = styled.button`
     outline: 0.15rem solid ${(props) => props.theme.accentColor};
   }
 `;
-const MainContainer = styled.div`
-  overflow-y: auto;
-  max-height: 80vh;
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: gray;
-    border-radius: 4px;
-    border: 2px solid gray;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: gray};
-  }
-`;
-const TrashItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  width: 500px;
-  max-width: 600px;
-  margin-bottom: 1rem;
-  background-color: ${(props) => props.theme.secondaryBgColor};
-  border-radius: 0.5rem;
-  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
-`;
-const TrashItemInfo = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1rem;
-  overflow: hidden;
-`;
-const TrashItemText = styled.p`
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-const TrashPageContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem;
-`;
+
 const Navigation = styled.nav``;
 
 export default function TrashList() {
